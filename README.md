@@ -25,14 +25,10 @@ The project is currently live and accessible at:
 git clone https://github.com/harshaltapres-projects/ev-charger-security-solution.git
 cd ev-charger-security-solution
 Install Dependencies
-bash
-Copy
-Edit
+
 npm install
 Start the Development Server
-bash
-Copy
-Edit
+
 npm run dev
 Hardware Compatibility
 ESP32 / Raspberry Pi Pico W
@@ -52,8 +48,6 @@ Future Enhancements
 
 🔄 Firmware over-the-air (FOTA) updates
 
-javascript
-Copy
-Edit
+
 
 You can paste this into a file named `README.md` in your project root folder. Let me know if you also want an `LICENSE.md` or `.env.example` templat
