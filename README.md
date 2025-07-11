@@ -1,30 +1,62 @@
-# Ev charger security solution
+EV Charger Security Solution
 
-*Automatically synced with your [v0.dev](https://v0.dev) deployments*
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/AZ6dElCMKu6)
+Overview
+This repository contains a security solution prototype for Electric Vehicle (EV) chargers, focusing on secure communication and protection against cyber threats. The project aims to prevent man-in-the-middle attacks, malware injections, and unauthorized access by implementing enhanced authentication and secure data transfer protocols.
 
-## Overview
+Key Features
+Secure communication between EV and charger
 
-This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
+Basic anomaly detection and alert mechanism
 
-## Deployment
+Lightweight encryption protocol implementation
 
-Your project is live at:
+Real-time log monitoring for suspicious activities
 
-**[https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution](https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution)**
+Designed for microcontroller-based setups (ESP32/Raspberry Pi Pico W)
 
-## Build your app
+Deployment
+The project is currently live and accessible at:
 
-Continue building your app on:
+https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution
 
-**[https://v0.dev/chat/projects/AZ6dElCMKu6](https://v0.dev/chat/projects/AZ6dElCMKu6)**
+Getting Started
+To run this project locally:
 
-## How It Works
+Clone the repository:
 
-1. Create and modify your project using [v0.dev](https://v0.dev)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+bash
+Copy
+Edit
+git clone https://github.com/harshaltapres-projects/ev-charger-security-solution.git
+cd ev-charger-security-solution
+Install dependencies:
+
+bash
+Copy
+Edit
+npm install
+Start the development server:
+
+bash
+Copy
+Edit
+npm run dev
+Hardware Compatibility
+ESP32 / Raspberry Pi Pico W
+
+WiFi module (if not inbuilt)
+
+Optional: Display module (OLED/LCD) for device status
+
+Secure memory chip (for storing authentication credentials)
+
+Future Enhancements
+Full OCPP support
+
+Integration with cloud-based monitoring
+
+AI-enhanced threat detection engine
+
+Firmware over-the-air (FOTA) updates
+
