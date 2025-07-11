@@ -1,46 +1,34 @@
-EV Charger Security Solution
+# EV Charger Security Solution
 
+## Overview
 
-Overview
 This repository contains a security solution prototype for Electric Vehicle (EV) chargers, focusing on secure communication and protection against cyber threats. The project aims to prevent man-in-the-middle attacks, malware injections, and unauthorized access by implementing enhanced authentication and secure data transfer protocols.
 
-Key Features
-Secure communication between EV and charger
+## Key Features
 
-Basic anomaly detection and alert mechanism
+- 🔐 Secure communication between EV and charger  
+- 🚨 Basic anomaly detection and alert mechanism  
+- 🔒 Lightweight encryption protocol implementation  
+- 📊 Real-time log monitoring for suspicious activities  
+- ⚙️ Designed for microcontroller-based setups (ESP32 / Raspberry Pi Pico W)
 
-Lightweight encryption protocol implementation
+## Deployment
 
-Real-time log monitoring for suspicious activities
+The project is currently live and accessible at:  
+**[https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution](https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution)**
 
-Designed for microcontroller-based setups (ESP32/Raspberry Pi Pico W)
+## Getting Started
 
-Deployment
-The project is currently live and accessible at:
+### Clone the Repository
 
-https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution
-
-Getting Started
-To run this project locally:
-
-Clone the repository:
-
-bash
-Copy
-Edit
+```bash
 git clone https://github.com/harshaltapres-projects/ev-charger-security-solution.git
 cd ev-charger-security-solution
-Install dependencies:
+Install Dependencies
 
-bash
-Copy
-Edit
 npm install
-Start the development server:
+Start the Development Server
 
-bash
-Copy
-Edit
 npm run dev
 Hardware Compatibility
 ESP32 / Raspberry Pi Pico W
@@ -52,11 +40,12 @@ Optional: Display module (OLED/LCD) for device status
 Secure memory chip (for storing authentication credentials)
 
 Future Enhancements
-Full OCPP support
+✅ Full OCPP support
 
-Integration with cloud-based monitoring
+☁️ Integration with cloud-based monitoring
 
-AI-enhanced threat detection engine
+🤖 Threat detection engine (optional ML integration)
 
-Firmware over-the-air (FOTA) updates
+🔄 Firmware over-the-air (FOTA) updates
 
+You can paste this into a file named `README.md` in your project root folder. Let me know if you also want an `LICENSE.md` or `.env.example` template 
