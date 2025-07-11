@@ -1,10 +1,12 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type React from "react"
+import type { Metadata } from "next"
+import "./globals.css"
+import { Navigation } from "@/components/layout/navigation"
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: "EV-SOAR Security Center",
+  description: "Secure EV-Charger Communication Overlay System",
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -14,7 +16,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Navigation />
+        {children}
+      </body>
     </html>
   )
 }

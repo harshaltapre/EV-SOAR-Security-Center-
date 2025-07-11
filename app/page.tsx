@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -42,77 +43,20 @@ interface ThreatAlert {
 }
 
 export default function EVSOARDashboard() {
-  const [chargers, setChargers] = useState<ChargerStatus[]>([
-    {
-      id: "CHG-001",
-      location: "Downtown Mall",
-      status: "secure",
-      lastScan: "2 min ago",
-      threatLevel: 5,
-      connectedVehicles: 3,
-    },
-    {
-      id: "CHG-002",
-      location: "Airport Terminal",
-      status: "warning",
-      lastScan: "1 min ago",
-      threatLevel: 35,
-      connectedVehicles: 7,
-    },
-    {
-      id: "CHG-003",
-      location: "Shopping Center",
-      status: "threat",
-      lastScan: "30 sec ago",
-      threatLevel: 85,
-      connectedVehicles: 2,
-    },
-    {
-      id: "CHG-004",
-      location: "Office Complex",
-      status: "secure",
-      lastScan: "3 min ago",
-      threatLevel: 10,
-      connectedVehicles: 5,
-    },
-  ])
-
-  const [threats, setThreats] = useState<ThreatAlert[]>([
-    {
-      id: "THR-001",
-      type: "mitm",
-      severity: "critical",
-      charger: "CHG-003",
-      timestamp: "2 min ago",
-      description: "Potential man-in-the-middle attack detected on OCPP communication",
-      status: "active",
-    },
-    {
-      id: "THR-002",
-      type: "protocol_anomaly",
-      severity: "medium",
-      charger: "CHG-002",
-      timestamp: "5 min ago",
-      description: "Unusual OCPP message patterns detected",
-      status: "investigating",
-    },
-    {
-      id: "THR-003",
-      type: "malware",
-      severity: "high",
-      charger: "CHG-001",
-      timestamp: "1 hour ago",
-      description: "Suspicious firmware modification attempt blocked",
-      status: "resolved",
-    },
-  ])
-
+  const [chargers, setChargers] = useState<ChargerStatus[]>([])
+  const [threats, setThreats] = useState<ThreatAlert[]>([])
   const [systemStats, setSystemStats] = useState({
-    totalChargers: 247,
-    secureChargers: 198,
-    threatsBlocked: 1247,
-    uptime: 99.7,
+    totalChargers: 0,
+    secureChargers: 0,
+    threatsBlocked: 0,
+    uptime: 0,
   })
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirect to dashboard on load
+    router.push("/dashboard")
+  }, [router])
 
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -1,53 +1,30 @@
-# EV Charger Security Solution
+# Ev charger security solution
+
+*Automatically synced with your [v0.dev](https://v0.dev) deployments*
+
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/AZ6dElCMKu6)
 
 ## Overview
 
-This repository contains a security solution prototype for Electric Vehicle (EV) chargers, focusing on secure communication and protection against cyber threats. The project aims to prevent man-in-the-middle attacks, malware injections, and unauthorized access by implementing enhanced authentication and secure data transfer protocols.
-
-## Key Features
-
-- 🔐 Secure communication between EV and charger  
-- 🚨 Basic anomaly detection and alert mechanism  
-- 🔒 Lightweight encryption protocol implementation  
-- 📊 Real-time log monitoring for suspicious activities  
-- ⚙️ Designed for microcontroller-based setups (ESP32 / Raspberry Pi Pico W)
+This repository will stay in sync with your deployed chats on [v0.dev](https://v0.dev).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.dev](https://v0.dev).
 
 ## Deployment
 
-The project is currently live and accessible at:  
+Your project is live at:
+
 **[https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution](https://vercel.com/harshaltapres-projects/v0-ev-charger-security-solution)**
 
-## Getting Started
+## Build your app
 
-### Clone the Repository
+Continue building your app on:
 
-```bash
-git clone https://github.com/harshaltapres-projects/ev-charger-security-solution.git
-cd ev-charger-security-solution
-Install Dependencies
+**[https://v0.dev/chat/projects/AZ6dElCMKu6](https://v0.dev/chat/projects/AZ6dElCMKu6)**
 
-npm install
-Start the Development Server
+## How It Works
 
-npm run dev
-Hardware Compatibility
-ESP32 / Raspberry Pi Pico W
-
-WiFi module (if not inbuilt)
-
-Optional: Display module (OLED/LCD) for device status
-
-Secure memory chip (for storing authentication credentials)
-
-Future Enhancements
-✅ Full OCPP support
-
-☁️ Integration with cloud-based monitoring
-
-🤖 Threat detection engine (optional ML integration)
-
-🔄 Firmware over-the-air (FOTA) updates
-
-
-
-You can paste this into a file named `README.md` in your project root folder. Let me know if you also want an `LICENSE.md` or `.env.example` templat
+1. Create and modify your project using [v0.dev](https://v0.dev)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository
