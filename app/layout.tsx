@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
-import "./globals.css"
 import { Navigation } from "@/components/layout/navigation"
+import "./globals.css"
 
 export const metadata: Metadata = {
   title: "EV-SOAR Security Center",
@@ -16,9 +16,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-gray-50">
         <Navigation />
-        {children}
+        <div className="lg:pl-64">
+          <main className="min-h-screen">{children}</main>
+        </div>
       </body>
     </html>
   )

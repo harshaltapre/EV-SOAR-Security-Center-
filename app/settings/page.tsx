@@ -9,71 +9,120 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Settings, Shield, Bell, Users, Database, Network, Save } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Settings, Shield, Bell, Network, Database, Key, Users, Save, RefreshCw, CheckCircle } from "lucide-react"
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
     // Security Settings
     threatDetectionEnabled: true,
     realTimeMonitoring: true,
-    autoResponse: false,
-    encryptionLevel: "AES-256",
-    certificateValidation: true,
+    autoBlockThreats: false,
+    threatSensitivity: "medium",
 
     // Notification Settings
-    emailAlerts: true,
-    smsAlerts: false,
+    emailNotifications: true,
+    smsNotifications: false,
     slackIntegration: true,
-    alertThreshold: "medium",
-
-    // System Settings
-    scanInterval: "30",
-    dataRetention: "90",
-    backupFrequency: "daily",
-    logLevel: "info",
+    notificationThreshold: "medium",
 
     // Network Settings
-    vpnEnabled: true,
-    firewallRules: "strict",
-    portScanning: true,
-    bandwidthLimit: "1000",
+    scanInterval: "30",
+    connectionTimeout: "10",
+    maxRetries: "3",
+
+    // System Settings
+    dataRetention: "90",
+    logLevel: "info",
+    backupEnabled: true,
+    backupFrequency: "daily",
   })
+
+  const [saved, setSaved] = useState(false)
 
   const handleSettingChange = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }))
   }
 
-  const saveSettings = () => {
+  const handleSave = () => {
     // In a real app, this would save to the backend
     console.log("Saving settings:", settings)
-    // Show success message
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
+  const handleReset = () => {
+    // Reset to default values
+    setSettings({
+      threatDetectionEnabled: true,
+      realTimeMonitoring: true,
+      autoBlockThreats: false,
+      threatSensitivity: "medium",
+      emailNotifications: true,
+      smsNotifications: false,
+      slackIntegration: true,
+      notificationThreshold: "medium",
+      scanInterval: "30",
+      connectionTimeout: "10",
+      maxRetries: "3",
+      dataRetention: "90",
+      logLevel: "info",
+      backupEnabled: true,
+      backupFrequency: "daily",
+    })
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Settings className="h-6 w-6 md:h-8 md:w-8 text-gray-600" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <Settings className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
               System Settings
             </h1>
-            <p className="text-gray-600 mt-1">Configure security, monitoring, and system preferences</p>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Configure EV-SOAR security parameters</p>
           </div>
-          <Button onClick={saveSettings}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleReset}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
+          </div>
         </div>
 
+        {/* Success Alert */}
+        {saved && (
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-700">Settings saved successfully!</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Settings Tabs */}
         <Tabs defaultValue="security" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5">
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="notifications">Alerts</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
-            <TabsTrigger value="network">Network</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              <span className="hidden sm:inline">Notifications</span>
+            </TabsTrigger>
+            <TabsTrigger value="network" className="flex items-center gap-2">
+              <Network className="h-4 w-4" />
+              <span className="hidden sm:inline">Network</span>
+            </TabsTrigger>
+            <TabsTrigger value="system" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              <span className="hidden sm:inline">System</span>
+            </TabsTrigger>
           </TabsList>
 
           {/* Security Settings */}
@@ -82,80 +131,64 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
-                  Security Configuration
+                  Threat Detection
                 </CardTitle>
-                <CardDescription>Configure threat detection and security protocols</CardDescription>
+                <CardDescription>Configure security monitoring and threat detection parameters</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="threat-detection">Real-time Threat Detection</Label>
-                        <p className="text-sm text-muted-foreground">Enable AI-powered threat detection</p>
-                      </div>
-                      <Switch
-                        id="threat-detection"
-                        checked={settings.threatDetectionEnabled}
-                        onCheckedChange={(checked) => handleSettingChange("threatDetectionEnabled", checked)}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="real-time">Real-time Monitoring</Label>
-                        <p className="text-sm text-muted-foreground">Continuous system monitoring</p>
-                      </div>
-                      <Switch
-                        id="real-time"
-                        checked={settings.realTimeMonitoring}
-                        onCheckedChange={(checked) => handleSettingChange("realTimeMonitoring", checked)}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="auto-response">Automated Response</Label>
-                        <p className="text-sm text-muted-foreground">Automatically respond to threats</p>
-                      </div>
-                      <Switch
-                        id="auto-response"
-                        checked={settings.autoResponse}
-                        onCheckedChange={(checked) => handleSettingChange("autoResponse", checked)}
-                      />
-                    </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Real-time Threat Detection</Label>
+                    <p className="text-sm text-muted-foreground">Enable continuous monitoring of OCPP communications</p>
                   </div>
+                  <Switch
+                    checked={settings.threatDetectionEnabled}
+                    onCheckedChange={(checked) => handleSettingChange("threatDetectionEnabled", checked)}
+                  />
+                </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="encryption">Encryption Level</Label>
-                      <Select
-                        value={settings.encryptionLevel}
-                        onValueChange={(value) => handleSettingChange("encryptionLevel", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="AES-128">AES-128</SelectItem>
-                          <SelectItem value="AES-256">AES-256</SelectItem>
-                          <SelectItem value="ChaCha20">ChaCha20</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="cert-validation">Certificate Validation</Label>
-                        <p className="text-sm text-muted-foreground">Validate SSL/TLS certificates</p>
-                      </div>
-                      <Switch
-                        id="cert-validation"
-                        checked={settings.certificateValidation}
-                        onCheckedChange={(checked) => handleSettingChange("certificateValidation", checked)}
-                      />
-                    </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Real-time Monitoring</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Monitor charger status and communications in real-time
+                    </p>
                   </div>
+                  <Switch
+                    checked={settings.realTimeMonitoring}
+                    onCheckedChange={(checked) => handleSettingChange("realTimeMonitoring", checked)}
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Auto-block Threats</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Automatically block detected threats without manual intervention
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.autoBlockThreats}
+                    onCheckedChange={(checked) => handleSettingChange("autoBlockThreats", checked)}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Threat Detection Sensitivity</Label>
+                  <Select
+                    value={settings.threatSensitivity}
+                    onValueChange={(value) => handleSettingChange("threatSensitivity", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low - Fewer false positives</SelectItem>
+                      <SelectItem value="medium">Medium - Balanced detection</SelectItem>
+                      <SelectItem value="high">High - Maximum security</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">Higher sensitivity may result in more false positives</p>
                 </div>
               </CardContent>
             </Card>
@@ -167,67 +200,117 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="h-5 w-5" />
-                  Alert Configuration
+                  Alert Notifications
                 </CardTitle>
                 <CardDescription>Configure how and when you receive security alerts</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="email-alerts">Email Alerts</Label>
-                        <p className="text-sm text-muted-foreground">Receive alerts via email</p>
-                      </div>
-                      <Switch
-                        id="email-alerts"
-                        checked={settings.emailAlerts}
-                        onCheckedChange={(checked) => handleSettingChange("emailAlerts", checked)}
-                      />
-                    </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Email Notifications</Label>
+                    <p className="text-sm text-muted-foreground">Receive threat alerts via email</p>
+                  </div>
+                  <Switch
+                    checked={settings.emailNotifications}
+                    onCheckedChange={(checked) => handleSettingChange("emailNotifications", checked)}
+                  />
+                </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="sms-alerts">SMS Alerts</Label>
-                        <p className="text-sm text-muted-foreground">Receive critical alerts via SMS</p>
-                      </div>
-                      <Switch
-                        id="sms-alerts"
-                        checked={settings.smsAlerts}
-                        onCheckedChange={(checked) => handleSettingChange("smsAlerts", checked)}
-                      />
-                    </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">SMS Notifications</Label>
+                    <p className="text-sm text-muted-foreground">Receive critical alerts via SMS</p>
+                  </div>
+                  <Switch
+                    checked={settings.smsNotifications}
+                    onCheckedChange={(checked) => handleSettingChange("smsNotifications", checked)}
+                  />
+                </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="slack">Slack Integration</Label>
-                        <p className="text-sm text-muted-foreground">Send alerts to Slack channels</p>
-                      </div>
-                      <Switch
-                        id="slack"
-                        checked={settings.slackIntegration}
-                        onCheckedChange={(checked) => handleSettingChange("slackIntegration", checked)}
-                      />
-                    </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Slack Integration</Label>
+                    <p className="text-sm text-muted-foreground">Send alerts to Slack channels</p>
+                  </div>
+                  <Switch
+                    checked={settings.slackIntegration}
+                    onCheckedChange={(checked) => handleSettingChange("slackIntegration", checked)}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Notification Threshold</Label>
+                  <Select
+                    value={settings.notificationThreshold}
+                    onValueChange={(value) => handleSettingChange("notificationThreshold", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low - All threats</SelectItem>
+                      <SelectItem value="medium">Medium - Medium+ severity</SelectItem>
+                      <SelectItem value="high">High - High+ severity only</SelectItem>
+                      <SelectItem value="critical">Critical - Critical only</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Only send notifications for threats above this severity level
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Network Settings */}
+          <TabsContent value="network" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Network className="h-5 w-5" />
+                  Network Configuration
+                </CardTitle>
+                <CardDescription>Configure network monitoring and connection parameters</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="scanInterval">Scan Interval (seconds)</Label>
+                    <Input
+                      id="scanInterval"
+                      type="number"
+                      value={settings.scanInterval}
+                      onChange={(e) => handleSettingChange("scanInterval", e.target.value)}
+                      min="10"
+                      max="300"
+                    />
+                    <p className="text-sm text-muted-foreground">How often to scan chargers for threats</p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="alert-threshold">Alert Threshold</Label>
-                      <Select
-                        value={settings.alertThreshold}
-                        onValueChange={(value) => handleSettingChange("alertThreshold", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="low">Low - All events</SelectItem>
-                          <SelectItem value="medium">Medium - Important events</SelectItem>
-                          <SelectItem value="high">High - Critical events only</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="connectionTimeout">Connection Timeout (seconds)</Label>
+                    <Input
+                      id="connectionTimeout"
+                      type="number"
+                      value={settings.connectionTimeout}
+                      onChange={(e) => handleSettingChange("connectionTimeout", e.target.value)}
+                      min="5"
+                      max="60"
+                    />
+                    <p className="text-sm text-muted-foreground">Timeout for charger connections</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="maxRetries">Max Connection Retries</Label>
+                    <Input
+                      id="maxRetries"
+                      type="number"
+                      value={settings.maxRetries}
+                      onChange={(e) => handleSettingChange("maxRetries", e.target.value)}
+                      min="1"
+                      max="10"
+                    />
+                    <p className="text-sm text-muted-foreground">Maximum retry attempts for failed connections</p>
                   </div>
                 </div>
               </CardContent>
@@ -242,185 +325,156 @@ export default function SettingsPage() {
                   <Database className="h-5 w-5" />
                   System Configuration
                 </CardTitle>
-                <CardDescription>Configure system performance and data management</CardDescription>
+                <CardDescription>Configure system-wide settings and data management</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="scan-interval">Scan Interval (seconds)</Label>
-                      <Input
-                        id="scan-interval"
-                        type="number"
-                        value={settings.scanInterval}
-                        onChange={(e) => handleSettingChange("scanInterval", e.target.value)}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="data-retention">Data Retention (days)</Label>
-                      <Input
-                        id="data-retention"
-                        type="number"
-                        value={settings.dataRetention}
-                        onChange={(e) => handleSettingChange("dataRetention", e.target.value)}
-                      />
-                    </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="dataRetention">Data Retention (days)</Label>
+                    <Input
+                      id="dataRetention"
+                      type="number"
+                      value={settings.dataRetention}
+                      onChange={(e) => handleSettingChange("dataRetention", e.target.value)}
+                      min="30"
+                      max="365"
+                    />
+                    <p className="text-sm text-muted-foreground">How long to keep threat and log data</p>
                   </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="backup-frequency">Backup Frequency</Label>
-                      <Select
-                        value={settings.backupFrequency}
-                        onValueChange={(value) => handleSettingChange("backupFrequency", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="hourly">Hourly</SelectItem>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="log-level">Log Level</Label>
-                      <Select
-                        value={settings.logLevel}
-                        onValueChange={(value) => handleSettingChange("logLevel", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="debug">Debug</SelectItem>
-                          <SelectItem value="info">Info</SelectItem>
-                          <SelectItem value="warn">Warning</SelectItem>
-                          <SelectItem value="error">Error</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="logLevel">Log Level</Label>
+                    <Select value={settings.logLevel} onValueChange={(value) => handleSettingChange("logLevel", value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="error">Error - Errors only</SelectItem>
+                        <SelectItem value="warn">Warning - Warnings and errors</SelectItem>
+                        <SelectItem value="info">Info - General information</SelectItem>
+                        <SelectItem value="debug">Debug - Detailed debugging</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">Level of detail in system logs</p>
                   </div>
                 </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-base font-medium">Automatic Backups</Label>
+                    <p className="text-sm text-muted-foreground">Enable automatic system and data backups</p>
+                  </div>
+                  <Switch
+                    checked={settings.backupEnabled}
+                    onCheckedChange={(checked) => handleSettingChange("backupEnabled", checked)}
+                  />
+                </div>
+
+                {settings.backupEnabled && (
+                  <div className="space-y-2">
+                    <Label htmlFor="backupFrequency">Backup Frequency</Label>
+                    <Select
+                      value={settings.backupFrequency}
+                      onValueChange={(value) => handleSettingChange("backupFrequency", value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hourly">Hourly</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">How often to create system backups</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
-          </TabsContent>
 
-          {/* Network Settings */}
-          <TabsContent value="network" className="space-y-6">
+            {/* API Keys Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Network className="h-5 w-5" />
-                  Network Security
+                  <Key className="h-5 w-5" />
+                  API Keys & Integrations
                 </CardTitle>
-                <CardDescription>Configure network security and access controls</CardDescription>
+                <CardDescription>Manage external service integrations</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="vpn">VPN Protection</Label>
-                        <p className="text-sm text-muted-foreground">Enable VPN for all connections</p>
-                      </div>
-                      <Switch
-                        id="vpn"
-                        checked={settings.vpnEnabled}
-                        onCheckedChange={(checked) => handleSettingChange("vpnEnabled", checked)}
-                      />
-                    </div>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="slackWebhook">Slack Webhook URL</Label>
+                  <Input
+                    id="slackWebhook"
+                    type="password"
+                    placeholder="https://hooks.slack.com/services/..."
+                    className="font-mono"
+                  />
+                </div>
 
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="port-scanning">Port Scanning</Label>
-                        <p className="text-sm text-muted-foreground">Monitor for unauthorized port access</p>
-                      </div>
-                      <Switch
-                        id="port-scanning"
-                        checked={settings.portScanning}
-                        onCheckedChange={(checked) => handleSettingChange("portScanning", checked)}
-                      />
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="emailService">Email Service API Key</Label>
+                  <Input
+                    id="emailService"
+                    type="password"
+                    placeholder="Enter your email service API key"
+                    className="font-mono"
+                  />
+                </div>
 
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firewall-rules">Firewall Rules</Label>
-                      <Select
-                        value={settings.firewallRules}
-                        onValueChange={(value) => handleSettingChange("firewallRules", value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="permissive">Permissive</SelectItem>
-                          <SelectItem value="balanced">Balanced</SelectItem>
-                          <SelectItem value="strict">Strict</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="bandwidth-limit">Bandwidth Limit (Mbps)</Label>
-                      <Input
-                        id="bandwidth-limit"
-                        type="number"
-                        value={settings.bandwidthLimit}
-                        onChange={(e) => handleSettingChange("bandwidthLimit", e.target.value)}
-                      />
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="smsService">SMS Service API Key</Label>
+                  <Input
+                    id="smsService"
+                    type="password"
+                    placeholder="Enter your SMS service API key"
+                    className="font-mono"
+                  />
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          {/* User Management */}
-          <TabsContent value="users" className="space-y-6">
+            {/* User Management */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   User Management
                 </CardTitle>
-                <CardDescription>Manage user access and permissions</CardDescription>
+                <CardDescription>Manage system users and permissions</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <h4 className="font-medium">Admin User</h4>
-                      <p className="text-sm text-muted-foreground">admin@evsoar.com</p>
+                      <h4 className="font-medium">Admin Users</h4>
+                      <p className="text-sm text-muted-foreground">Full system access</p>
                     </div>
-                    <Badge>Administrator</Badge>
+                    <Badge variant="secondary">3 users</Badge>
                   </div>
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <h4 className="font-medium">Security Analyst</h4>
-                      <p className="text-sm text-muted-foreground">analyst@evsoar.com</p>
+                      <h4 className="font-medium">Security Analysts</h4>
+                      <p className="text-sm text-muted-foreground">Threat monitoring and response</p>
                     </div>
-                    <Badge variant="secondary">Analyst</Badge>
+                    <Badge variant="secondary">8 users</Badge>
                   </div>
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <h4 className="font-medium">Operator</h4>
-                      <p className="text-sm text-muted-foreground">operator@evsoar.com</p>
+                      <h4 className="font-medium">Operators</h4>
+                      <p className="text-sm text-muted-foreground">Read-only access</p>
                     </div>
-                    <Badge variant="outline">Operator</Badge>
+                    <Badge variant="secondary">12 users</Badge>
                   </div>
+
+                  <Button variant="outline" className="w-full bg-transparent">
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Users
+                  </Button>
                 </div>
-
-                <Button className="w-full">
-                  <Users className="h-4 w-4 mr-2" />
-                  Add New User
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>

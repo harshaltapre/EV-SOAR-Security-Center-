@@ -6,10 +6,15 @@ const threats = [
     type: "mitm",
     severity: "critical",
     charger: "CHG-003",
-    timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    timestamp: new Date().toISOString(),
     description: "Potential man-in-the-middle attack detected on OCPP communication",
     status: "active",
-    details: "Suspicious certificate exchange detected during authentication handshake",
+    details: {
+      sourceIP: "192.168.1.45",
+      targetPort: 8080,
+      protocol: "OCPP 2.0.1",
+      confidence: 95,
+    },
   },
   {
     id: "THR-002",
@@ -19,7 +24,12 @@ const threats = [
     timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
     description: "Unusual OCPP message patterns detected",
     status: "investigating",
-    details: "Message frequency exceeds normal parameters by 300%",
+    details: {
+      anomalyType: "Message frequency spike",
+      normalRate: "2 msg/min",
+      detectedRate: "45 msg/min",
+      confidence: 78,
+    },
   },
   {
     id: "THR-003",
@@ -29,7 +39,12 @@ const threats = [
     timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
     description: "Suspicious firmware modification attempt blocked",
     status: "resolved",
-    details: "Unauthorized firmware update attempt from unknown source",
+    details: {
+      malwareType: "Firmware injection",
+      blockedFile: "update_v2.1.5.bin",
+      hash: "a1b2c3d4e5f6...",
+      confidence: 92,
+    },
   },
 ]
 

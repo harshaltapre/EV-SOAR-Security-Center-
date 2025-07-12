@@ -1,15 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertTriangle, Shield, Search, Eye, CheckCircle, Clock, RefreshCw } from "lucide-react"
+import { AlertTriangle, Shield, Search, Filter, Eye, CheckCircle, Clock, AlertCircle } from "lucide-react"
 
-interface ThreatAlert {
+interface ThreatData {
   id: string
   type: "mitm" | "malware" | "protocol_anomaly" | "unauthorized_access"
   severity: "low" | "medium" | "high" | "critical"
@@ -17,23 +17,34 @@ interface ThreatAlert {
   timestamp: string
   description: string
   status: "active" | "investigating" | "resolved"
-  details: string
+  details: {
+    [key: string]: any
+  }
 }
 
 export default function ThreatsPage() {
-  const [threats, setThreats] = useState<ThreatAlert[]>([])
-  const [filteredThreats, setFilteredThreats] = useState<ThreatAlert[]>([])
+  const [threats, setThreats] = useState<ThreatData[]>([])
+  const [filteredThreats, setFilteredThreats] = useState<ThreatData[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [severityFilter, setSeverityFilter] = useState("all")
+
+  useEffect(() => {
+    fetchThreats()
+    const interval = setInterval(fetchThreats, 15000) // Refresh every 15 seconds
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    filterThreats()
+  }, [threats, searchTerm, statusFilter, severityFilter])
 
   const fetchThreats = async () => {
     try {
       const response = await fetch("/api/threats")
       const data = await response.json()
       setThreats(data)
-      setFilteredThreats(data)
     } catch (error) {
       console.error("Failed to fetch threats:", error)
     } finally {
@@ -41,13 +52,7 @@ export default function ThreatsPage() {
     }
   }
 
-  useEffect(() => {
-    fetchThreats()
-    const interval = setInterval(fetchThreats, 15000) // Update every 15 seconds
-    return () => clearInterval(interval)
-  }, [])
-
-  useEffect(() => {
+  const filterThreats = () => {
     let filtered = threats
 
     if (searchTerm) {
@@ -68,7 +73,23 @@ export default function ThreatsPage() {
     }
 
     setFilteredThreats(filtered)
-  }, [threats, searchTerm, statusFilter, severityFilter])
+  }
+
+  const updateThreatStatus = async (threatId: string, newStatus: string) => {
+    try {
+      const response = await fetch("/api/threats", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: threatId, status: newStatus }),
+      })
+
+      if (response.ok) {
+        fetchThreats()
+      }
+    } catch (error) {
+      console.error("Failed to update threat status:", error)
+    }
+  }
 
   const getSeverityBadge = (severity: string) => {
     const colors = {
@@ -83,26 +104,13 @@ export default function ThreatsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "active":
-        return <AlertTriangle className="h-4 w-4 text-red-600" />
+        return <AlertCircle className="h-4 w-4 text-red-600" />
       case "investigating":
         return <Clock className="h-4 w-4 text-yellow-600" />
       case "resolved":
         return <CheckCircle className="h-4 w-4 text-green-600" />
       default:
-        return <Shield className="h-4 w-4" />
-    }
-  }
-
-  const updateThreatStatus = async (threatId: string, newStatus: string) => {
-    try {
-      await fetch("/api/threats", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: threatId, status: newStatus }),
-      })
-      fetchThreats()
-    } catch (error) {
-      console.error("Failed to update threat status:", error)
+        return <AlertTriangle className="h-4 w-4" />
     }
   }
 
@@ -110,31 +118,33 @@ export default function ThreatsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading threats...</p>
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Shield className="h-6 w-6 md:h-8 md:w-8 text-red-600" />
-              Threat Detection Center
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-red-600" />
+              Threat Management
             </h1>
-            <p className="text-gray-600 mt-1">Monitor and respond to security threats</p>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Monitor and respond to security threats</p>
           </div>
-          <Button onClick={fetchThreats} size="sm" variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
         </div>
 
         {/* Active Threats Alert */}
@@ -151,23 +161,25 @@ export default function ThreatsPage() {
         {/* Filters */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Filter Threats</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filters
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search threats..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search threats..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
+
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-48">
+                <SelectTrigger>
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -177,8 +189,9 @@ export default function ThreatsPage() {
                   <SelectItem value="resolved">Resolved</SelectItem>
                 </SelectContent>
               </Select>
+
               <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                <SelectTrigger className="w-full md:w-48">
+                <SelectTrigger>
                   <SelectValue placeholder="Filter by severity" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,89 +202,136 @@ export default function ThreatsPage() {
                   <SelectItem value="low">Low</SelectItem>
                 </SelectContent>
               </Select>
+
+              <div className="text-sm text-muted-foreground flex items-center">
+                Showing {filteredThreats.length} of {threats.length} threats
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Threats List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Threat Alerts ({filteredThreats.length})</CardTitle>
-            <CardDescription>Security incidents and anomalies detected across the network</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {filteredThreats.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No threats found matching your criteria</p>
-                </div>
-              ) : (
-                filteredThreats.map((threat) => (
-                  <div key={threat.id} className="border rounded-lg p-4 space-y-3 hover:bg-gray-50 transition-colors">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge className={getSeverityBadge(threat.severity)}>{threat.severity.toUpperCase()}</Badge>
-                        <Badge variant="outline">{threat.type.replace("_", " ").toUpperCase()}</Badge>
-                        <div className="flex items-center gap-1">
-                          {getStatusIcon(threat.status)}
-                          <Badge
-                            variant={
-                              threat.status === "active"
-                                ? "destructive"
-                                : threat.status === "investigating"
-                                  ? "default"
-                                  : "secondary"
-                            }
-                          >
-                            {threat.status.toUpperCase()}
-                          </Badge>
-                        </div>
+        <div className="space-y-4">
+          {filteredThreats.map((threat) => (
+            <Card key={threat.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4 sm:p-6">
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {getStatusIcon(threat.status)}
+                      <div>
+                        <h3 className="font-semibold text-lg">{threat.id}</h3>
+                        <p className="text-sm text-muted-foreground">{new Date(threat.timestamp).toLocaleString()}</p>
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(threat.timestamp).toLocaleString()}
-                      </span>
                     </div>
-
-                    <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-medium">Charger: {threat.charger}</h3>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">{threat.description}</p>
-                      <p className="text-xs text-gray-600">{threat.details}</p>
-                    </div>
-
-                    <div className="flex flex-col md:flex-row gap-2">
-                      <Button size="sm" variant="outline" className="flex-1 bg-transparent">
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </Button>
-                      {threat.status === "active" && (
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => updateThreatStatus(threat.id, "investigating")}
-                        >
-                          Start Investigation
-                        </Button>
-                      )}
-                      {threat.status === "investigating" && (
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="flex-1"
-                          onClick={() => updateThreatStatus(threat.id, "resolved")}
-                        >
-                          Mark Resolved
-                        </Button>
-                      )}
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className={getSeverityBadge(threat.severity)}>{threat.severity.toUpperCase()}</Badge>
+                      <Badge variant="outline">{threat.type.replace("_", " ").toUpperCase()}</Badge>
+                      <Badge
+                        variant={
+                          threat.status === "active"
+                            ? "destructive"
+                            : threat.status === "investigating"
+                              ? "default"
+                              : "secondary"
+                        }
+                      >
+                        {threat.status.toUpperCase()}
+                      </Badge>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+
+                  {/* Content */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="lg:col-span-2 space-y-3">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Description</h4>
+                        <p className="text-sm text-gray-600 mt-1">{threat.description}</p>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium text-gray-900">Affected Charger</h4>
+                        <p className="text-sm text-gray-600 mt-1">{threat.charger}</p>
+                      </div>
+
+                      {/* Technical Details */}
+                      <div>
+                        <h4 className="font-medium text-gray-900">Technical Details</h4>
+                        <div className="mt-2 space-y-1">
+                          {Object.entries(threat.details).map(([key, value]) => (
+                            <div key={key} className="flex flex-col sm:flex-row sm:justify-between text-sm">
+                              <span className="font-medium capitalize">{key.replace(/([A-Z])/g, " $1")}:</span>
+                              <span className="text-gray-600 sm:text-right">{String(value)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="space-y-3">
+                      <h4 className="font-medium text-gray-900">Actions</h4>
+                      <div className="flex flex-col gap-2">
+                        <Button size="sm" variant="outline" className="w-full bg-transparent">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+
+                        {threat.status === "active" && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="w-full"
+                            onClick={() => updateThreatStatus(threat.id, "investigating")}
+                          >
+                            Start Investigation
+                          </Button>
+                        )}
+
+                        {threat.status === "investigating" && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="w-full"
+                            onClick={() => updateThreatStatus(threat.id, "resolved")}
+                          >
+                            Mark Resolved
+                          </Button>
+                        )}
+
+                        {threat.status === "resolved" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full bg-transparent"
+                            onClick={() => updateThreatStatus(threat.id, "active")}
+                          >
+                            Reopen
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredThreats.length === 0 && (
+          <Card>
+            <CardContent className="text-center py-12">
+              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No threats found</h3>
+              <p className="text-gray-600">
+                {searchTerm || statusFilter !== "all" || severityFilter !== "all"
+                  ? "Try adjusting your filters to see more results."
+                  : "Your system is secure. No threats detected."}
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

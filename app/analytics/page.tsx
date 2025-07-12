@@ -3,47 +3,58 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
 } from "recharts"
-import { TrendingUp, Shield, Zap, RefreshCw, Download, BarChart3 } from "lucide-react"
+import { TrendingUp, Shield, Activity, AlertTriangle, CheckCircle, Zap, Server, Wifi } from "lucide-react"
 
-interface Analytics {
+interface AnalyticsData {
   totalChargers: number
   secureChargers: number
   threatsBlocked: number
   uptime: number
-  dailyStats: Array<{ date: string; threats: number; chargers: number }>
-  threatTypes: Array<{ type: string; count: number; percentage: number }>
+  dailyStats: Array<{
+    date: string
+    threats: number
+    blocked: number
+    uptime: number
+  }>
+  threatTypes: Array<{
+    type: string
+    count: number
+    percentage: number
+  }>
   networkHealth: {
     latency: number
     packetLoss: number
     bandwidth: number
-    encryption: number
+    connections: number
   }
 }
 
-const COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e"]
+const COLORS = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6"]
 
 export default function AnalyticsPage() {
-  const [analytics, setAnalytics] = useState<Analytics | null>(null)
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState("7d")
+
+  useEffect(() => {
+    fetchAnalytics()
+    const interval = setInterval(fetchAnalytics, 60000) // Refresh every minute
+    return () => clearInterval(interval)
+  }, [])
 
   const fetchAnalytics = async () => {
     try {
@@ -57,302 +68,274 @@ export default function AnalyticsPage() {
     }
   }
 
-  useEffect(() => {
-    fetchAnalytics()
-    const interval = setInterval(fetchAnalytics, 60000) // Update every minute
-    return () => clearInterval(interval)
-  }, [])
-
-  // Generate additional mock data for charts
-  const weeklyTrends = [
-    { week: "Week 1", threats: 45, incidents: 12, resolved: 43 },
-    { week: "Week 2", threats: 38, incidents: 8, resolved: 36 },
-    { week: "Week 3", threats: 52, incidents: 15, resolved: 48 },
-    { week: "Week 4", threats: 41, incidents: 9, resolved: 39 },
-  ]
-
-  const hourlyActivity = [
-    { hour: "00:00", activity: 12 },
-    { hour: "04:00", activity: 8 },
-    { hour: "08:00", activity: 25 },
-    { hour: "12:00", activity: 35 },
-    { hour: "16:00", activity: 42 },
-    { hour: "20:00", activity: 28 },
-  ]
-
-  const securityMetrics = [
-    { metric: "Encryption Strength", value: 98, status: "excellent" },
-    { metric: "Authentication Success", value: 99.2, status: "excellent" },
-    { metric: "Intrusion Detection", value: 95, status: "good" },
-    { metric: "Vulnerability Scan", value: 87, status: "good" },
-  ]
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading analytics...</p>
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!analytics) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to load analytics</h3>
+            <p className="text-gray-600">Please try refreshing the page.</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 md:h-8 md:w-8 text-purple-600" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+              <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
               Security Analytics
             </h1>
-            <p className="text-gray-600 mt-1">Comprehensive security insights and trends</p>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Comprehensive security insights and trends</p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={fetchAnalytics} size="sm" variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            <Button size="sm" variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-green-600 border-green-600">
+              <Activity className="h-3 w-3 mr-1" />
+              Real-time
+            </Badge>
           </div>
         </div>
 
         {/* Key Metrics */}
-        {analytics && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Total Chargers</p>
-                    <p className="text-2xl font-bold">{analytics.totalChargers}</p>
-                    <p className="text-xs text-green-600">+2.5% from last week</p>
-                  </div>
-                  <Zap className="h-8 w-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Chargers</CardTitle>
+              <Zap className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalChargers}</div>
+              <p className="text-xs text-muted-foreground">Monitored stations</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Security Score</p>
-                    <p className="text-2xl font-bold text-green-600">98.2%</p>
-                    <p className="text-xs text-green-600">+0.8% improvement</p>
-                  </div>
-                  <Shield className="h-8 w-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Security Score</CardTitle>
+              <Shield className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {((analytics.secureChargers / analytics.totalChargers) * 100).toFixed(1)}%
+              </div>
+              <p className="text-xs text-muted-foreground">{analytics.secureChargers} secure chargers</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Threats Blocked</p>
-                    <p className="text-2xl font-bold">{analytics.threatsBlocked}</p>
-                    <p className="text-xs text-red-600">+12% this month</p>
-                  </div>
-                  <Shield className="h-8 w-8 text-red-600" />
-                </div>
-              </CardContent>
-            </Card>
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Threats Blocked</CardTitle>
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.threatsBlocked}</div>
+              <p className="text-xs text-muted-foreground">Last 30 days</p>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">System Uptime</p>
-                    <p className="text-2xl font-bold">{analytics.uptime}%</p>
-                    <p className="text-xs text-green-600">Above target</p>
-                  </div>
-                  <TrendingUp className="h-8 w-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">System Uptime</CardTitle>
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.uptime}%</div>
+              <p className="text-xs text-muted-foreground">Last 30 days</p>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Threat Trends */}
-          {analytics && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Daily Threat Detection</CardTitle>
-                <CardDescription>Security incidents over the past week</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 md:h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={analytics.dailyStats}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="threats" stroke="#ef4444" fill="#ef444420" strokeWidth={2} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Threat Distribution */}
-          {analytics && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Threat Type Distribution</CardTitle>
-                <CardDescription>Breakdown of security threat categories</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-64 md:h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={analytics.threatTypes}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ type, percentage }) => `${type} ${percentage}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="count"
-                      >
-                        {analytics.threatTypes.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Weekly Trends */}
+          {/* Daily Threats Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>Weekly Security Trends</CardTitle>
-              <CardDescription>Threats detected vs resolved over time</CardDescription>
+              <CardTitle>Daily Threat Activity</CardTitle>
+              <CardDescription>Threats detected and blocked over the last 7 days</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 md:h-80">
+              <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weeklyTrends}>
+                  <BarChart data={analytics.dailyStats}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="week" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(value) =>
+                        new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      }
+                    />
                     <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="threats" fill="#ef4444" />
-                    <Bar dataKey="resolved" fill="#22c55e" />
+                    <Tooltip labelFormatter={(value) => new Date(value).toLocaleDateString()} />
+                    <Bar dataKey="threats" fill="#ef4444" name="Threats Detected" />
+                    <Bar dataKey="blocked" fill="#22c55e" name="Threats Blocked" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
 
-          {/* Hourly Activity */}
+          {/* Threat Types Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle>24-Hour Activity Pattern</CardTitle>
-              <CardDescription>Security events throughout the day</CardDescription>
+              <CardTitle>Threat Types Distribution</CardTitle>
+              <CardDescription>Breakdown of different threat categories</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-64 md:h-80">
+              <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={hourlyActivity}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis />
+                  <PieChart>
+                    <Pie
+                      data={analytics.threatTypes}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ type, percentage }) => `${type}: ${percentage}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="count"
+                    >
+                      {analytics.threatTypes.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
                     <Tooltip />
-                    <Line type="monotone" dataKey="activity" stroke="#8b5cf6" strokeWidth={3} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* System Uptime Trend */}
+          <Card>
+            <CardHeader>
+              <CardTitle>System Uptime Trend</CardTitle>
+              <CardDescription>Daily uptime percentage over the last 7 days</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={analytics.dailyStats}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(value) =>
+                        new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      }
+                    />
+                    <YAxis domain={[98, 100]} />
+                    <Tooltip
+                      labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                      formatter={(value) => [`${value}%`, "Uptime"]}
+                    />
+                    <Line type="monotone" dataKey="uptime" stroke="#3b82f6" strokeWidth={2} dot={{ fill: "#3b82f6" }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
+
+          {/* Network Health */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wifi className="h-5 w-5" />
+                Network Health Metrics
+              </CardTitle>
+              <CardDescription>Real-time network performance indicators</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Network Latency</span>
+                  <span className="text-sm text-green-600">{analytics.networkHealth.latency}ms</span>
+                </div>
+                <Progress value={100 - analytics.networkHealth.latency} className="h-2" />
+                <p className="text-xs text-muted-foreground">Lower is better (Target: &lt;20ms)</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Bandwidth Usage</span>
+                  <span className="text-sm text-blue-600">{analytics.networkHealth.bandwidth}%</span>
+                </div>
+                <Progress value={analytics.networkHealth.bandwidth} className="h-2" />
+                <p className="text-xs text-muted-foreground">Current network utilization</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Packet Loss</span>
+                  <span className="text-sm text-green-600">{analytics.networkHealth.packetLoss}%</span>
+                </div>
+                <Progress value={100 - analytics.networkHealth.packetLoss * 50} className="h-2" />
+                <p className="text-xs text-muted-foreground">Lower is better (Target: &lt;0.1%)</p>
+              </div>
+
+              <div className="pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Server className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Active Connections</span>
+                  </div>
+                  <Badge variant="secondary">{analytics.networkHealth.connections}</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Security Metrics */}
+        {/* Threat Types Breakdown */}
         <Card>
           <CardHeader>
-            <CardTitle>Security Performance Metrics</CardTitle>
-            <CardDescription>Key security indicators and their current status</CardDescription>
+            <CardTitle>Detailed Threat Analysis</CardTitle>
+            <CardDescription>Comprehensive breakdown of security threats by category</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {securityMetrics.map((metric, index) => (
-                <div key={index} className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">{metric.metric}</span>
-                    <Badge variant={metric.status === "excellent" ? "default" : "secondary"}>{metric.status}</Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Performance</span>
-                      <span className="font-medium">{metric.value}%</span>
+            <div className="space-y-4">
+              {analytics.threatTypes.map((threat, index) => (
+                <div key={threat.type} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    ></div>
+                    <div>
+                      <h4 className="font-medium">{threat.type.replace("_", " ").toUpperCase()}</h4>
+                      <p className="text-sm text-muted-foreground">{threat.count} incidents detected</p>
                     </div>
-                    <Progress value={metric.value} className="h-2" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold">{threat.percentage}%</div>
+                    <div className="text-sm text-muted-foreground">of total threats</div>
                   </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-
-        {/* Network Health */}
-        {analytics && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Network Health Status</CardTitle>
-              <CardDescription>Real-time network performance and security metrics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Latency</span>
-                    <span className="font-medium">{analytics.networkHealth.latency}ms</span>
-                  </div>
-                  <Progress value={100 - analytics.networkHealth.latency} className="h-2" />
-                  <p className="text-xs text-muted-foreground">Target: &lt;20ms</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Packet Loss</span>
-                    <span className="font-medium">{analytics.networkHealth.packetLoss}%</span>
-                  </div>
-                  <Progress value={100 - analytics.networkHealth.packetLoss * 50} className="h-2" />
-                  <p className="text-xs text-muted-foreground">Target: &lt;0.1%</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Bandwidth Utilization</span>
-                    <span className="font-medium">{analytics.networkHealth.bandwidth}%</span>
-                  </div>
-                  <Progress value={analytics.networkHealth.bandwidth} className="h-2" />
-                  <p className="text-xs text-muted-foreground">Optimal range</p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Encryption Coverage</span>
-                    <span className="font-medium">{analytics.networkHealth.encryption}%</span>
-                  </div>
-                  <Progress value={analytics.networkHealth.encryption} className="h-2" />
-                  <p className="text-xs text-muted-foreground">All traffic encrypted</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   )
