@@ -10,20 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Zap,
-  Shield,
-  AlertTriangle,
-  Clock,
-  Battery,
-  MapPin,
-  LogOut,
-  Play,
-  Square,
-  Pause,
-  DollarSign,
-  Plug,
-} from "lucide-react"
+import { Zap, Shield, AlertTriangle, Clock, Battery, MapPin, Play, Square, Pause, DollarSign, Plug } from "lucide-react"
+import { ProfileDropdown } from "@/components/profile-dropdown"
 
 interface User {
   id: string
@@ -246,14 +234,7 @@ export default function UserDashboard() {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700">Welcome, {user?.name}</span>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            <div className="flex items-center gap-4">{user && <ProfileDropdown user={user} />}</div>
           </div>
         </div>
       </header>

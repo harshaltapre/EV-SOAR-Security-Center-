@@ -8,18 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import {
-  Shield,
-  Zap,
-  AlertTriangle,
-  CheckCircle,
-  Activity,
-  LogOut,
-  Bell,
-  Settings,
-  BarChart3,
-  MapPin,
-} from "lucide-react"
+import { Shield, Zap, AlertTriangle, CheckCircle, Activity, Bell, Settings, BarChart3, MapPin } from "lucide-react"
 import {
   LineChart,
   Line,
@@ -32,6 +21,7 @@ import {
   Pie,
   Cell,
 } from "recharts"
+import { ProfileDropdown } from "@/components/profile-dropdown"
 
 interface User {
   id: string
@@ -236,12 +226,7 @@ export default function AdminDashboard() {
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4" />
               </Button>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-700">{user?.name}</span>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
+              {user && <ProfileDropdown user={user} />}
             </div>
           </div>
         </div>

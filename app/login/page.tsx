@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Shield, Zap, Lock, Eye, EyeOff } from "lucide-react"
+import Link from "next/link"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -59,14 +60,6 @@ export default function LoginPage() {
     }
   }
 
-  const handleDemoLogin = (userType: "admin" | "user") => {
-    setFormData({
-      email: userType === "admin" ? "admin@evsoar.com" : "user@example.com",
-      password: "demo123",
-      userType,
-    })
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
@@ -103,18 +96,12 @@ export default function LoginPage() {
               <TabsContent value="admin" className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600">Station managers and security administrators</p>
-                  <Button variant="outline" size="sm" onClick={() => handleDemoLogin("admin")} className="w-full">
-                    Use Demo Admin Account
-                  </Button>
                 </div>
               </TabsContent>
 
               <TabsContent value="user" className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600">EV drivers and charging customers</p>
-                  <Button variant="outline" size="sm" onClick={() => handleDemoLogin("user")} className="w-full">
-                    Use Demo User Account
-                  </Button>
                 </div>
               </TabsContent>
             </Tabs>
@@ -173,14 +160,23 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <div className="text-center space-y-2">
-                <p className="text-sm text-gray-600">Demo Credentials:</p>
-                <div className="text-xs text-gray-500 space-y-1">
-                  <div>Admin: admin@evsoar.com / demo123</div>
-                  <div>User: user@example.com / demo123</div>
-                </div>
+            <div className="mt-6 space-y-4">
+              <div className="text-center">
+                <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                  Forgot your password?
+                </Link>
               </div>
+
+              {formData.userType === "user" && (
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">
+                    Don't have an account?{" "}
+                    <Link href="/register" className="text-blue-600 hover:underline font-medium">
+                      Create one here
+                    </Link>
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

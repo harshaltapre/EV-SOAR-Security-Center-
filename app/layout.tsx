@@ -1,26 +1,30 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Navigation } from "@/components/layout/navigation"
+import { Inter } from "next/font/google"
 import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "EV-SOAR Security Center",
-  description: "Secure EV-Charger Communication Overlay System",
-  generator: "v0.dev",
+  title: "EV-SOAR - Secure EV Charging Platform",
+  description: "Advanced security and orchestration for EV charging infrastructure",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50">
-        <Navigation />
-        <div className="lg:pl-64">
-          <main className="min-h-screen">{children}</main>
-        </div>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

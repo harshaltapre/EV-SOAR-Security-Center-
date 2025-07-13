@@ -14,40 +14,50 @@ interface User {
   role: "admin" | "user"
   stationId?: string
   permissions: string[]
+  phone?: string
+  vehicleInfo?: {
+    make: string
+    model: string
+    year: number
+    licensePlate: string
+  }
 }
 
 // Mock user database
 const users: User[] = [
   {
     id: "admin-1",
-    email: "admin@evsoar.com",
-    name: "Station Manager",
+    email: "harshaltapre27@yahoo.com",
+    name: "System Administrator",
     role: "admin",
     stationId: "STATION-001",
     permissions: ["view_all", "manage_threats", "system_config", "user_management"],
   },
-  {
-    id: "user-1",
-    email: "user@example.com",
-    name: "John Doe",
-    role: "user",
-    permissions: ["view_sessions", "start_charging", "view_history"],
-  },
 ]
+
+// Mock password storage - in production, use proper password hashing
+const passwords: Record<string, string> = {
+  "harshaltapre27@yahoo.com": "Admin123",
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body: LoginRequest = await request.json()
     const { email, password, userType } = body
 
-    // Mock authentication - in production, use proper password hashing
+    // Find user with matching email and role
     const user = users.find((u) => u.email === email && u.role === userType)
 
     if (!user) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 })
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
-    // Create session token (in production, use JWT or proper session management)
+    // Check password
+    if (passwords[email] !== password) {
+      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
+    }
+
+    // Create session token
     const sessionToken = `session_${user.id}_${Date.now()}`
 
     // Set secure cookie
@@ -67,11 +77,14 @@ export async function POST(request: NextRequest) {
         name: user.name,
         role: user.role,
         stationId: user.stationId,
+        phone: user.phone,
+        vehicleInfo: user.vehicleInfo,
         permissions: user.permissions,
       },
       token: sessionToken,
     })
   } catch (error) {
+    console.error("Authentication error:", error)
     return NextResponse.json({ error: "Authentication failed" }, { status: 500 })
   }
 }
@@ -100,10 +113,13 @@ export async function GET(request: NextRequest) {
         name: user.name,
         role: user.role,
         stationId: user.stationId,
+        phone: user.phone,
+        vehicleInfo: user.vehicleInfo,
         permissions: user.permissions,
       },
     })
   } catch (error) {
+    console.error("Token validation error:", error)
     return NextResponse.json({ error: "Token validation failed" }, { status: 500 })
   }
 }
@@ -115,6 +131,7 @@ export async function DELETE() {
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error("Logout error:", error)
     return NextResponse.json({ error: "Logout failed" }, { status: 500 })
   }
 }
