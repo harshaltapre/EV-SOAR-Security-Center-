@@ -1,17 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { getResetToken, deleteResetToken, passwords } from "@/lib/mock-db" // Import from mock-db
 
 interface ResetPasswordRequest {
   resetToken: string
   newPassword: string
-  confirmPassword: string
 }
 
-// Mock password storage - should match the one in auth route
-const passwords: Record<string, string> = {
-  "harshaltapre27@yahoo.com": "Admin123",
-}
-
-// Password validation
+// Password validation (same as register route)
 const validatePassword = (password: string) => {
   const minLength = 8
   const hasUpperCase = /[A-Z]/.test(password)
@@ -40,56 +35,40 @@ const validatePassword = (password: string) => {
 export async function POST(request: NextRequest) {
   try {
     const body: ResetPasswordRequest = await request.json()
-    const { resetToken, newPassword, confirmPassword } = body
+    const { resetToken, newPassword } = body
 
-    if (!resetToken || !newPassword || !confirmPassword) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 })
+    if (!resetToken || !newPassword) {
+      return NextResponse.json({ error: "Reset token and new password are required" }, { status: 400 })
     }
 
-    // Validate reset token format
-    if (!resetToken.startsWith("reset_")) {
-      return NextResponse.json({ error: "Invalid reset token" }, { status: 400 })
+    const storedResetToken = getResetToken(resetToken)
+    if (!storedResetToken) {
+      return NextResponse.json({ error: "Invalid or expired reset token" }, { status: 400 })
     }
 
-    // Extract email from token
-    const tokenParts = resetToken.split("_")
-    if (tokenParts.length < 3) {
-      return NextResponse.json({ error: "Invalid reset token format" }, { status: 400 })
-    }
-
-    const email = tokenParts[1]
-    const timestamp = Number.parseInt(tokenParts[2])
-
-    // Check if token has expired (15 minutes)
-    if (Date.now() - timestamp > 15 * 60 * 1000) {
+    // Check if reset token has expired
+    if (Date.now() > storedResetToken.expires) {
+      deleteResetToken(resetToken)
       return NextResponse.json({ error: "Reset token has expired. Please request a new one." }, { status: 400 })
     }
 
-    // Validate passwords match
-    if (newPassword !== confirmPassword) {
-      return NextResponse.json({ error: "Passwords do not match" }, { status: 400 })
-    }
-
-    // Validate password strength
+    // Validate new password strength
     const passwordError = validatePassword(newPassword)
     if (passwordError) {
       return NextResponse.json({ error: passwordError }, { status: 400 })
     }
 
-    // Check if email exists
-    if (!passwords.hasOwnProperty(email)) {
-      return NextResponse.json({ error: "Account not found" }, { status: 404 })
-    }
+    // Update user's password
+    const userEmail = storedResetToken.email
+    // In a real app, you'd hash the new password before storing it
+    passwords.set(userEmail, newPassword) // Update password in mock-db
 
-    // Update password
-    passwords[email] = newPassword
+    // Clean up reset token
+    deleteResetToken(resetToken)
 
-    return NextResponse.json({
-      success: true,
-      message: "Password reset successfully. You can now sign in with your new password.",
-    })
+    return NextResponse.json({ success: true, message: "Password reset successfully!" })
   } catch (error) {
-    console.error("Password reset error:", error)
-    return NextResponse.json({ error: "Password reset failed. Please try again." }, { status: 500 })
+    console.error("Reset password error:", error)
+    return NextResponse.json({ error: "Failed to reset password. Please try again." }, { status: 500 })
   }
 }

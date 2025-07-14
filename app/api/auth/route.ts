@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
+import { users, passwords, getUserByEmail } from "@/lib/mock-db" // Import from mock-db
 
 interface LoginRequest {
   email: string
@@ -23,37 +24,21 @@ interface User {
   }
 }
 
-// Mock user database
-const users: User[] = [
-  {
-    id: "admin-1",
-    email: "harshaltapre27@yahoo.com",
-    name: "System Administrator",
-    role: "admin",
-    stationId: "STATION-001",
-    permissions: ["view_all", "manage_threats", "system_config", "user_management"],
-  },
-]
-
-// Mock password storage - in production, use proper password hashing
-const passwords: Record<string, string> = {
-  "harshaltapre27@yahoo.com": "Admin123",
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body: LoginRequest = await request.json()
     const { email, password, userType } = body
 
     // Find user with matching email and role
-    const user = users.find((u) => u.email === email && u.role === userType)
+    const user = getUserByEmail(email)
 
-    if (!user) {
+    if (!user || user.role !== userType) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
     // Check password
-    if (passwords[email] !== password) {
+    const storedPassword = passwords.get(email)
+    if (storedPassword !== password) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
@@ -61,7 +46,7 @@ export async function POST(request: NextRequest) {
     const sessionToken = `session_${user.id}_${Date.now()}`
 
     // Set secure cookie
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     cookieStore.set("auth-token", sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -91,7 +76,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     const token = cookieStore.get("auth-token")
 
     if (!token) {
@@ -100,7 +85,9 @@ export async function GET(request: NextRequest) {
 
     // Validate token and get user info
     const userId = token.value.split("_")[1]
-    const user = users.find((u) => u.id === userId)
+    // In a real app, you'd look up the user by ID from your database
+    // For mock-db, we'll iterate or find a way to map ID back to email if needed
+    const user = Array.from(users.values()).find((u) => u.id === userId)
 
     if (!user) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 })
@@ -126,7 +113,7 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
     cookieStore.delete("auth-token")
 
     return NextResponse.json({ success: true })

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { addUser, users } from "@/lib/mock-db" // Import from mock-db
 
 interface RegisterRequest {
   name: string
@@ -30,10 +31,6 @@ interface User {
   createdAt: string
   emailVerified: boolean
 }
-
-// Mock user database - in production, use a real database
-const users: User[] = []
-const passwords: Record<string, string> = {}
 
 // Password validation
 const validatePassword = (password: string) => {
@@ -88,8 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
-    const existingUser = users.find((u) => u.email === email)
-    if (existingUser) {
+    if (users.has(email)) {
       return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 })
     }
 
@@ -103,12 +99,11 @@ export async function POST(request: NextRequest) {
       phone,
       vehicleInfo,
       createdAt: new Date().toISOString(),
-      emailVerified: false,
+      emailVerified: false, // Set to false, can be verified later
     }
 
     // Store user and password (in production, hash the password)
-    users.push(newUser)
-    passwords[email] = password
+    addUser(newUser, password)
 
     return NextResponse.json({
       success: true,

@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
 
   const [otpInfo, setOtpInfo] = useState({
     attemptsLeft: 3,
-    demoOtp: "",
+    maskedEmail: "",
   })
 
   const handleSendOTP = async (e: React.FormEvent) => {
@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
 
       if (response.ok) {
         setSuccess(data.message)
-        setOtpInfo((prev) => ({ ...prev, demoOtp: data.otp })) // For demo purposes
+        setOtpInfo((prev) => ({ ...prev, maskedEmail: data.maskedEmail }))
         setStep("otp")
       } else {
         setError(data.error || "Failed to send reset code")
@@ -140,7 +140,6 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({
           resetToken: formData.resetToken,
           newPassword: formData.newPassword,
-          confirmPassword: formData.confirmPassword,
         }),
       })
 
@@ -163,7 +162,7 @@ export default function ForgotPasswordPage() {
 
   const handleResendOTP = async () => {
     setFormData((prev) => ({ ...prev, otp: "" }))
-    setOtpInfo((prev) => ({ ...prev, attemptsLeft: 3 }))
+    setOtpInfo((prev) => ({ ...prev, attemptsLeft: 3 })) // Reset attempts on resend
     await handleSendOTP(new Event("submit") as any)
   }
 
@@ -274,14 +273,7 @@ export default function ForgotPasswordPage() {
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
-                  <p className="text-xs text-center text-gray-500">Code sent to {formData.email}</p>
-                  {otpInfo.demoOtp && (
-                    <Alert className="border-blue-200 bg-blue-50">
-                      <AlertDescription className="text-blue-700">
-                        <strong>Demo Code:</strong> {otpInfo.demoOtp}
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <p className="text-xs text-center text-gray-500">Code sent to {otpInfo.maskedEmail}</p>
                 </div>
 
                 {error && (
@@ -307,7 +299,7 @@ export default function ForgotPasswordPage() {
                     )}
                   </Button>
 
-                  <Button type="button" variant="ghost" className="w-full" onClick={handleResendOTP}>
+                  <Button type="button" variant="ghost" className="w-full" onClick={handleResendOTP} disabled={loading}>
                     Resend Code
                   </Button>
                 </div>

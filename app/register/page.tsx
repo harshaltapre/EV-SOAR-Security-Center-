@@ -88,12 +88,14 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
           phone: formData.phone,
-          vehicleInfo: {
-            make: formData.vehicleMake,
-            model: formData.vehicleModel,
-            year: formData.vehicleYear,
-            licensePlate: formData.licensePlate,
-          },
+          vehicleInfo: formData.vehicleMake
+            ? {
+                make: formData.vehicleMake,
+                model: formData.vehicleModel,
+                year: formData.vehicleYear,
+                licensePlate: formData.licensePlate,
+              }
+            : undefined,
           termsAccepted: formData.termsAccepted,
         }),
       })
@@ -115,8 +117,8 @@ export default function RegisterPage() {
     }
   }
 
-  const passwordStrength = getPasswordStrength(formData.password)
-  const strengthInfo = getPasswordStrengthLabel(passwordStrength)
+  const passwordStrengthValue = getPasswordStrength(formData.password)
+  const strengthInfo = getPasswordStrengthLabel(passwordStrengthValue)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -256,7 +258,7 @@ export default function RegisterPage() {
                       <span className="text-xs text-gray-600">Password strength:</span>
                       <span className={`text-xs font-medium ${strengthInfo.color}`}>{strengthInfo.label}</span>
                     </div>
-                    <Progress value={passwordStrength} className="h-2" />
+                    <Progress value={passwordStrengthValue} className="h-2" />
 
                     <div className="space-y-1">
                       {passwordRequirements.map((req, index) => {

@@ -8,16 +8,16 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "EV-SOAR - Secure EV Charging Platform",
-  description: "Advanced security and orchestration for EV charging infrastructure",
-    generator: 'v0.dev'
+  title: "EV-SOAR Security Center",
+  description: "Secure EV-Charger Communication Overlay System",
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>

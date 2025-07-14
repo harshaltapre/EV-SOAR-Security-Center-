@@ -1,12 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { storeResetToken, deleteOTP, getOTP, storeOTP } from "@/lib/mock-db" // Import from mock-db
 
 interface VerifyOTPRequest {
   email: string
   otp: string
 }
-
-// Mock OTP storage - should match the one in forgot-password
-const otpStorage: Record<string, { otp: string; expires: number; attempts: number }> = {}
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,26 +15,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email and OTP are required" }, { status: 400 })
     }
 
-    const storedOTP = otpStorage[email]
+    const storedOTP = getOTP(email)
     if (!storedOTP) {
       return NextResponse.json({ error: "No reset request found. Please request a new code." }, { status: 404 })
     }
 
     // Check if OTP has expired
     if (Date.now() > storedOTP.expires) {
-      delete otpStorage[email]
+      deleteOTP(email)
       return NextResponse.json({ error: "Reset code has expired. Please request a new one." }, { status: 400 })
     }
 
     // Check attempts limit
     if (storedOTP.attempts >= 3) {
-      delete otpStorage[email]
+      deleteOTP(email)
       return NextResponse.json({ error: "Too many failed attempts. Please request a new code." }, { status: 429 })
     }
 
     // Verify OTP
     if (storedOTP.otp !== otp) {
       storedOTP.attempts++
+      storeOTP(email, storedOTP) // Update attempts
       return NextResponse.json(
         {
           error: "Invalid reset code. Please try again.",
@@ -48,6 +47,16 @@ export async function POST(request: NextRequest) {
 
     // OTP is valid - generate reset token
     const resetToken = `reset_${email}_${Date.now()}`
+    const resetTokenExpires = Date.now() + 15 * 60 * 1000 // 15 minutes
+
+    // Store reset token
+    storeResetToken(resetToken, {
+      email,
+      expires: resetTokenExpires,
+    })
+
+    // Clean up OTP
+    deleteOTP(email)
 
     return NextResponse.json({
       success: true,

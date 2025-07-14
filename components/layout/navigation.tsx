@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
-import { Shield, BarChart3, AlertTriangle, Settings, Menu, Home, Activity } from "lucide-react"
+import { Shield, BarChart3, AlertTriangle, Settings, Menu, Home, Activity, Bell } from "lucide-react" // Added Bell
 import { cn } from "@/lib/utils"
 
 const navigation = [
@@ -16,6 +16,7 @@ const navigation = [
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Hardware", href: "/hardware", icon: Shield },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Notifications", href: "/notifications", icon: Bell }, // Added Notifications
 ]
 
 export function Navigation() {
