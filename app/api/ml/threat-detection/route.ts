@@ -17,6 +17,11 @@ interface ThreatDetectionRequest {
     chargingPattern: string
     deviceFingerprint: string
   }
+  unusualActivityScore?: number
+  loginAttempts?: number
+  failedLoginAttempts?: number
+  firmwareChecksumMismatch?: boolean
+  networkTrafficSpike?: number
 }
 
 interface ThreatPrediction {
@@ -70,6 +75,11 @@ class ThreatDetectionModel {
       sessionDurationAnomaly: this.calculateDurationAnomaly(userBehavior.sessionDuration),
       behaviorDeviationScore: this.calculateBehaviorDeviation(userBehavior.chargingPattern),
       deviceFingerprintRisk: this.assessDeviceRisk(userBehavior.deviceFingerprint),
+      unusualActivityScore: data.unusualActivityScore || 0,
+      loginAttempts: data.loginAttempts || 0,
+      failedLoginAttempts: data.failedLoginAttempts || 0,
+      firmwareChecksumMismatch: data.firmwareChecksumMismatch ? 1 : 0,
+      networkTrafficSpike: data.networkTrafficSpike || 0,
     }
   }
 
@@ -86,6 +96,11 @@ class ThreatDetectionModel {
       sessionDurationAnomaly: 0.1,
       behaviorDeviationScore: 0.15,
       deviceFingerprintRisk: 0.22,
+      unusualActivityScore: 0.2,
+      loginAttempts: 0.1,
+      failedLoginAttempts: 0.15,
+      firmwareChecksumMismatch: 0.3,
+      networkTrafficSpike: 0.1,
     }
 
     let score = 0
@@ -102,6 +117,10 @@ class ThreatDetectionModel {
     if (features.protocolDiversity > 0.6) return "Protocol Anomaly"
     if (features.deviceFingerprintRisk > 0.7) return "Unauthorized Access"
     if (features.behaviorDeviationScore > 0.6) return "Session Hijacking"
+    if (features.unusualActivityScore > 0.7) return "Unusual Activity"
+    if (features.loginAttempts > 5 && features.failedLoginAttempts > 3) return "Brute Force Attempt"
+    if (features.firmwareChecksumMismatch > 0.2) return "Firmware Tampering"
+    if (features.networkTrafficSpike > 0.1) return "DDoS Suspect"
     return "Unknown Threat Pattern"
   }
 
@@ -198,55 +217,42 @@ export async function POST(request: NextRequest) {
   try {
     const data: ThreatDetectionRequest = await request.json()
 
-    // Validate input data
-    if (!data.chargerId || !data.networkData || !data.ocppMessages || !data.userBehavior) {
-      return NextResponse.json({ error: "Missing required data fields" }, { status: 400 })
+    if (!data) {
+      return NextResponse.json({ error: "No data provided for threat detection." }, { status: 400 })
     }
 
-    // Run ML inference
+    console.log("Received data for ML threat detection:", data)
+
+    // Simulate ML model processing
+    await new Promise((resolve) => setTimeout(resolve, 1500)) // Simulate processing time
+
     const prediction = await model.predict(data)
 
-    // Log threat detection event
-    console.log(`Threat detection for charger ${data.chargerId}:`, {
-      probability: prediction.threatProbability,
-      type: prediction.threatType,
-      severity: prediction.severity,
-    })
-
     return NextResponse.json({
-      success: true,
-      prediction,
-      timestamp: new Date().toISOString(),
+      threatDetected: prediction.threatProbability > 0.5,
+      threat:
+        prediction.threatProbability > 0.5
+          ? {
+              type: prediction.threatType,
+              severity: prediction.severity,
+              description: `Potential ${prediction.threatType} detected.`,
+              timestamp: new Date().toISOString(),
+            }
+          : null,
+      analysis: {
+        processedData: data,
+        modelConfidence: prediction.confidence,
+      },
     })
   } catch (error) {
-    console.error("Threat detection error:", error)
-    return NextResponse.json({ error: "Threat detection failed" }, { status: 500 })
+    console.error("ML Threat Detection API error:", error)
+    return NextResponse.json({ error: "Failed to perform ML threat detection." }, { status: 500 })
   }
 }
 
 export async function GET() {
   try {
-    // Return model information and statistics
-    const modelStats = {
-      modelVersion: "v1.2.3",
-      accuracy: 0.94,
-      precision: 0.92,
-      recall: 0.89,
-      f1Score: 0.9,
-      totalPredictions: 15847,
-      threatsDetected: 1247,
-      falsePositives: 89,
-      lastUpdated: "2024-01-15T10:30:00Z",
-      supportedThreatTypes: [
-        "Man-in-the-Middle Attack",
-        "Malware Injection",
-        "Protocol Anomaly",
-        "Unauthorized Access",
-        "Session Hijacking",
-      ],
-    }
-
-    return NextResponse.json(modelStats)
+    return NextResponse.json({ message: "ML Threat Detection API is running. Send POST requests with data." })
   } catch (error) {
     return NextResponse.json({ error: "Failed to get model information" }, { status: 500 })
   }

@@ -1,57 +1,88 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { users, updateUser } from "@/lib/mock-db" // Import from mock-db
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
-interface UpdateProfileRequest {
-  name?: string
-  phone?: string
-  vehicleInfo?: {
-    make: string
-    model: string
-    year: number
-    licensePlate: string
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createSupabaseServerClient()
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+
+    if (error || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Fetch user metadata
+    const profile = {
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.name || "",
+      phone: user.user_metadata?.phone || "",
+      vehicleInfo: {
+        make: user.user_metadata?.vehicle_make || "",
+        model: user.user_metadata?.vehicle_model || "",
+        year: user.user_metadata?.vehicle_year || "",
+        licensePlate: user.user_metadata?.vehicle_license_plate || "",
+      },
+    }
+
+    return NextResponse.json(profile)
+  } catch (error) {
+    console.error("Error fetching user profile:", error)
+    return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 })
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const token = cookieStore.get("auth-token")
+    const supabase = createSupabaseServerClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
 
-    if (!token) {
+    if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const userId = token.value.split("_")[1]
-    const user = Array.from(users.values()).find((u) => u.id === userId)
+    const body = await request.json()
+    const { name, phone, vehicleMake, vehicleModel, vehicleYear, vehicleLicensePlate } = body
 
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 })
-    }
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        name,
+        phone,
+        vehicle_make: vehicleMake,
+        vehicle_model: vehicleModel,
+        vehicle_year: vehicleYear,
+        vehicle_license_plate: vehicleLicensePlate,
+      },
+    })
 
-    const body: UpdateProfileRequest = await request.json()
-    const { name, phone, vehicleInfo } = body
-
-    const updatedUser = updateUser(user.email, { name, phone, vehicleInfo })
-
-    if (!updatedUser) {
-      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })
+    if (error) {
+      console.error("Error updating user profile:", error.message)
+      return NextResponse.json({ error: error.message || "Failed to update profile" }, { status: 400 })
     }
 
     return NextResponse.json({
       success: true,
       message: "Profile updated successfully",
       user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        name: updatedUser.name,
-        role: updatedUser.role,
-        phone: updatedUser.phone,
-        vehicleInfo: updatedUser.vehicleInfo,
+        id: data.user?.id,
+        email: data.user?.email,
+        name: data.user?.user_metadata?.name,
+        phone: data.user?.user_metadata?.phone,
+        vehicleInfo: {
+          make: data.user?.user_metadata?.vehicle_make,
+          model: data.user?.user_metadata?.vehicle_model,
+          year: data.user?.user_metadata?.vehicle_year,
+          licensePlate: data.user?.user_metadata?.vehicle_license_plate,
+        },
       },
     })
   } catch (error) {
-    console.error("Profile update error:", error)
+    console.error("Error in profile PUT API:", error)
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })
   }
 }

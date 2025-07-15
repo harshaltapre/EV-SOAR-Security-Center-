@@ -81,6 +81,37 @@ const sessions: ChargingSession[] = [
   },
 ]
 
+// Mock data for charging sessions
+const mockChargingSessions = [
+  {
+    id: "session-001",
+    chargerId: "charger-001",
+    userId: "user-abc",
+    startTime: new Date(Date.now() - 1000 * 60 * 90).toISOString(), // 90 mins ago
+    endTime: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+    energyConsumed: 15.2, // kWh
+    cost: 4.56,
+  },
+  {
+    id: "session-002",
+    chargerId: "charger-002",
+    userId: "user-xyz",
+    startTime: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 120 mins ago
+    endTime: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 60 mins ago
+    energyConsumed: 25.0, // kWh
+    cost: 7.5,
+  },
+  {
+    id: "session-003",
+    chargerId: "charger-001",
+    userId: "user-def",
+    startTime: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 mins ago
+    endTime: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 mins ago
+    energyConsumed: 10.0, // kWh
+    cost: 3.0,
+  },
+]
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -226,6 +257,8 @@ function getChargerLocation(chargerId: string): string {
     "CHG-002": "Airport Terminal",
     "CHG-003": "Shopping Center",
     "CHG-004": "Office Complex",
+    "charger-001": "Mock Location 1",
+    "charger-002": "Mock Location 2",
   }
   return locations[chargerId] || "Unknown Location"
 }

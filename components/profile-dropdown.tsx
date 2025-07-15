@@ -1,121 +1,111 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link" // Import Link
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Settings, LogOut, Edit } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "@/components/ui/use-toast"
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
+import { UserIcon, LogOut, Settings, CreditCard, LifeBuoy, Keyboard } from "lucide-react"
 
-interface ProfileDropdownProps {
-  user: {
-    id: string
-    email: string
-    name: string
-    role: string
-    phone?: string
-    vehicleInfo?: {
-      make: string
-      model: string
-      year: number
-      licensePlate: string
-    }
-  }
+interface UserProfile {
+  id: string
+  email: string
+  name?: string
+  role?: string
 }
 
-export function ProfileDropdown({ user }: ProfileDropdownProps) {
+export function ProfileDropdown() {
+  const [user, setUser] = useState<UserProfile | null>(null)
   const router = useRouter()
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [profileData, setProfileData] = useState({
-    name: user.name,
-    phone: user.phone || "",
-    vehicleInfo: user.vehicleInfo || {
-      make: "",
-      model: "",
-      year: new Date().getFullYear(),
-      licensePlate: "",
-    },
-  })
+  const supabase = createSupabaseBrowserClient()
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser()
+      if (user) {
+        setUser({
+          id: user.id,
+          email: user.email || "",
+          name: user.user_metadata?.name || user.email?.split("@")[0] || "User",
+          role: user.email === "harshaltapre27@yahoo.com" ? "Admin" : "User",
+        })
+      } else if (error) {
+        console.error("Error fetching user:", error.message)
+        setUser(null)
+      }
+    }
+
+    fetchUser()
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || "",
+          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
+          role: session.user.email === "harshaltapre27@yahoo.com" ? "Admin" : "User",
+        })
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => {
+      authListener.unsubscribe()
+    }
+  }, [supabase])
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth", { method: "DELETE" })
-      localStorage.removeItem("user")
-      router.push("/login")
-    } catch (error) {
-      console.error("Logout failed:", error)
-      toast({
-        title: "Error",
-        description: "Failed to logout. Please try again.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleUpdateProfile = async () => {
-    setIsLoading(true)
-    try {
-      const response = await fetch("/api/profile", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(profileData),
+      const response = await fetch("/api/auth", {
+        method: "DELETE",
       })
 
       if (response.ok) {
-        const data = await response.json()
-        // Update localStorage
-        localStorage.setItem("user", JSON.stringify(data.user))
-        setIsProfileOpen(false)
         toast({
-          title: "Success",
-          description: "Profile updated successfully!",
+          title: "Logged Out",
+          description: "You have been successfully logged out.",
+          variant: "default",
         })
-        // Refresh the page to update the UI
-        window.location.reload()
+        router.push("/login")
       } else {
-        throw new Error("Failed to update profile")
+        const data = await response.json()
+        toast({
+          title: "Logout Failed",
+          description: data.error || "An unexpected error occurred during logout.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      console.error("Profile update failed:", error)
+      console.error("Logout error:", error)
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: "Could not connect to the server for logout. Please try again.",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2)
+  if (!user) {
+    return (
+      <Button variant="ghost" size="sm" onClick={() => router.push("/login")}>
+        Login
+      </Button>
+    )
   }
 
   return (
@@ -123,7 +113,10 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-blue-600 text-white text-xs">{getInitials(user.name)}</AvatarFallback>
+            <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
+            <AvatarFallback>
+              {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -132,144 +125,42 @@ export function ProfileDropdown({ user }: ProfileDropdownProps) {
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user.name}</p>
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-            <p className="text-xs leading-none text-muted-foreground capitalize">{user.role} Account</p>
+            {user.role && <p className="text-xs leading-none text-muted-foreground mt-1">Role: {user.role}</p>}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-
-        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-          <DialogTrigger asChild>
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <Edit className="mr-2 h-4 w-4" />
-              <span>Profile Settings</span>
-            </DropdownMenuItem>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Edit Profile</DialogTitle>
-              <DialogDescription>Make changes to your profile here. Click save when you're done.</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  value={profileData.name}
-                  onChange={(e) => setProfileData((prev) => ({ ...prev, name: e.target.value }))}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
-                  Phone
-                </Label>
-                <Input
-                  id="phone"
-                  value={profileData.phone}
-                  onChange={(e) => setProfileData((prev) => ({ ...prev, phone: e.target.value }))}
-                  className="col-span-3"
-                  placeholder="+1234567890"
-                />
-              </div>
-
-              {user.role === "user" && (
-                <>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="make" className="text-right">
-                      Vehicle Make
-                    </Label>
-                    <Input
-                      id="make"
-                      value={profileData.vehicleInfo.make}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({
-                          ...prev,
-                          vehicleInfo: { ...prev.vehicleInfo, make: e.target.value },
-                        }))
-                      }
-                      className="col-span-3"
-                      placeholder="Tesla"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="model" className="text-right">
-                      Vehicle Model
-                    </Label>
-                    <Input
-                      id="model"
-                      value={profileData.vehicleInfo.model}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({
-                          ...prev,
-                          vehicleInfo: { ...prev.vehicleInfo, model: e.target.value },
-                        }))
-                      }
-                      className="col-span-3"
-                      placeholder="Model 3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="year" className="text-right">
-                      Year
-                    </Label>
-                    <Input
-                      id="year"
-                      type="number"
-                      value={profileData.vehicleInfo.year}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({
-                          ...prev,
-                          vehicleInfo: { ...prev.vehicleInfo, year: Number.parseInt(e.target.value) },
-                        }))
-                      }
-                      className="col-span-3"
-                      min="2000"
-                      max="2030"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="license" className="text-right">
-                      License Plate
-                    </Label>
-                    <Input
-                      id="license"
-                      value={profileData.vehicleInfo.licensePlate}
-                      onChange={(e) =>
-                        setProfileData((prev) => ({
-                          ...prev,
-                          vehicleInfo: { ...prev.vehicleInfo, licensePlate: e.target.value },
-                        }))
-                      }
-                      className="col-span-3"
-                      placeholder="ABC-123"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsProfileOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleUpdateProfile} disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <DropdownMenuItem asChild>
-          <Link href="/settings">
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => router.push("/settings")}>
+            <UserIcon className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/settings/billing")}>
+            <CreditCard className="mr-2 h-4 w-4" />
+            <span>Billing</span>
+            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/settings")}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
-          </Link>
+            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Keyboard className="mr-2 h-4 w-4" />
+            <span>Keyboard shortcuts</span>
+            <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>
+          <LifeBuoy className="mr-2 h-4 w-4" />
+          <span>Support</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
+          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

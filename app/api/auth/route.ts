@@ -1,27 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { users, passwords, getUserByEmail } from "@/lib/mock-db" // Import from mock-db
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 interface LoginRequest {
   email: string
   password: string
-  userType: "admin" | "user"
-}
-
-interface User {
-  id: string
-  email: string
-  name: string
-  role: "admin" | "user"
-  stationId?: string
-  permissions: string[]
-  phone?: string
-  vehicleInfo?: {
-    make: string
-    model: string
-    year: number
-    licensePlate: string
-  }
+  userType: "admin" | "user" // userType is for conceptual role, Supabase handles auth directly
 }
 
 export async function POST(request: NextRequest) {
@@ -29,96 +12,92 @@ export async function POST(request: NextRequest) {
     const body: LoginRequest = await request.json()
     const { email, password, userType } = body
 
-    // Find user with matching email and role
-    const user = getUserByEmail(email)
+    const supabase = createSupabaseServerClient()
 
-    if (!user || user.role !== userType) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
-    }
-
-    // Check password
-    const storedPassword = passwords.get(email)
-    if (storedPassword !== password) {
-      return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
-    }
-
-    // Create session token
-    const sessionToken = `session_${user.id}_${Date.now()}`
-
-    // Set secure cookie
-    const cookieStore = cookies()
-    cookieStore.set("auth-token", sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60, // 24 hours
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     })
+
+    if (error) {
+      console.error("Supabase login error:", error.message, "Full error object:", error) // Enhanced logging
+      let errorMessage = "Invalid email or password."
+      if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Please confirm your email address to log in."
+      } else if (error.message.includes("Invalid login credentials") || error.status === 400) {
+        // Supabase often returns "Invalid login credentials" for wrong password or unconfirmed email
+        errorMessage = "Invalid email or password. Please check your credentials or confirm your email."
+      }
+      return NextResponse.json({ error: errorMessage }, { status: 401 })
+    }
+
+    // Enforce admin email for admin login type
+    if (userType === "admin" && data.user?.email !== "harshaltapre27@yahoo.com") {
+      await supabase.auth.signOut() // Sign out if not the designated admin
+      return NextResponse.json({ error: "Unauthorized access for admin panel." }, { status: 403 })
+    }
 
     return NextResponse.json({
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        stationId: user.stationId,
-        phone: user.phone,
-        vehicleInfo: user.vehicleInfo,
-        permissions: user.permissions,
+        id: data.user?.id,
+        email: data.user?.email,
+        name: data.user?.user_metadata?.name, // Assuming name is stored in user_metadata
+        role: userType, // This is a conceptual role for the demo
       },
-      token: sessionToken,
     })
   } catch (error) {
-    console.error("Authentication error:", error)
-    return NextResponse.json({ error: "Authentication failed" }, { status: 500 })
+    console.error("Authentication API error:", error)
+    return NextResponse.json({ error: "Authentication failed. Please try again." }, { status: 500 })
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    const token = cookieStore.get("auth-token")
+    const supabase = createSupabaseServerClient()
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
 
-    if (!token) {
-      return NextResponse.json({ error: "No authentication token" }, { status: 401 })
-    }
-
-    // Validate token and get user info
-    const userId = token.value.split("_")[1]
-    // In a real app, you'd look up the user by ID from your database
-    // For mock-db, we'll iterate or find a way to map ID back to email if needed
-    const user = Array.from(users.values()).find((u) => u.id === userId)
-
-    if (!user) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+    if (error || !user) {
+      return NextResponse.json({ error: "No authenticated user." }, { status: 401 })
     }
 
     return NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
-        role: user.role,
-        stationId: user.stationId,
-        phone: user.phone,
-        vehicleInfo: user.vehicleInfo,
-        permissions: user.permissions,
+        name: user.user_metadata?.name,
+        role: user.email === "harshaltapre27@yahoo.com" ? "admin" : "user", // Conceptual role based on email
+        phone: user.user_metadata?.phone,
+        vehicleInfo: {
+          make: user.user_metadata?.vehicle_make,
+          model: user.user_metadata?.vehicle_model,
+          year: user.user_metadata?.vehicle_year,
+          licensePlate: user.user_metadata?.vehicle_license_plate,
+        },
       },
     })
   } catch (error) {
-    console.error("Token validation error:", error)
-    return NextResponse.json({ error: "Token validation failed" }, { status: 500 })
+    console.error("Token validation API error:", error)
+    return NextResponse.json({ error: "Token validation failed." }, { status: 500 })
   }
 }
 
 export async function DELETE() {
   try {
-    const cookieStore = cookies()
-    cookieStore.delete("auth-token")
+    const supabase = createSupabaseServerClient()
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      console.error("Supabase logout error:", error.message)
+      return NextResponse.json({ error: error.message || "Logout failed." }, { status: 500 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("Logout error:", error)
-    return NextResponse.json({ error: "Logout failed" }, { status: 500 })
+    console.error("Logout API error:", error)
+    return NextResponse.json({ error: "Logout failed. Please try again." }, { status: 500 })
   }
 }

@@ -1,74 +1,56 @@
 import { NextResponse } from "next/server"
 
-const threats = [
+// Mock data for threats
+const mockThreats = [
   {
-    id: "THR-001",
-    type: "mitm",
-    severity: "critical",
-    charger: "CHG-003",
-    timestamp: new Date().toISOString(),
-    description: "Potential man-in-the-middle attack detected on OCPP communication",
-    status: "active",
-    details: {
-      sourceIP: "192.168.1.45",
-      targetPort: 8080,
-      protocol: "OCPP 2.0.1",
-      confidence: 95,
-    },
-  },
-  {
-    id: "THR-002",
-    type: "protocol_anomaly",
-    severity: "medium",
-    charger: "CHG-002",
-    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-    description: "Unusual OCPP message patterns detected",
-    status: "investigating",
-    details: {
-      anomalyType: "Message frequency spike",
-      normalRate: "2 msg/min",
-      detectedRate: "45 msg/min",
-      confidence: 78,
-    },
-  },
-  {
-    id: "THR-003",
-    type: "malware",
+    id: "threat-001",
+    type: "Unauthorized Access Attempt",
     severity: "high",
-    charger: "CHG-001",
-    timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-    description: "Suspicious firmware modification attempt blocked",
+    timestamp: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 mins ago
+    status: "active",
+    description: "Multiple failed login attempts on Charger #002 admin interface.",
+  },
+  {
+    id: "threat-002",
+    type: "Firmware Tampering Alert",
+    severity: "critical",
+    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+    status: "active",
+    description: "Checksum mismatch detected in Charger #001 firmware.",
+  },
+  {
+    id: "threat-003",
+    type: "DDoS Attack",
+    severity: "medium",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
     status: "resolved",
-    details: {
-      malwareType: "Firmware injection",
-      blockedFile: "update_v2.1.5.bin",
-      hash: "a1b2c3d4e5f6...",
-      confidence: 92,
-    },
+    description: "Unusual traffic spike targeting API endpoint, mitigated.",
+  },
+  {
+    id: "threat-004",
+    type: "Malware Signature Detected",
+    severity: "high",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(), // 3 hours ago
+    status: "active",
+    description: "Known malware signature found in log files of central server.",
+  },
+  {
+    id: "threat-005",
+    type: "Physical Tampering Alert",
+    severity: "low",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
+    status: "ignored",
+    description: "Proximity sensor triggered at Charger #003, no further suspicious activity.",
   },
 ]
 
 export async function GET() {
-  return NextResponse.json(threats)
-}
-
-export async function POST(request: Request) {
-  const body = await request.json()
-  const newThreat = {
-    id: `THR-${String(threats.length + 1).padStart(3, "0")}`,
-    ...body,
-    timestamp: new Date().toISOString(),
+  try {
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return NextResponse.json({ threats: mockThreats })
+  } catch (error) {
+    console.error("Error fetching threats:", error)
+    return NextResponse.json({ error: "Failed to fetch threats" }, { status: 500 })
   }
-  threats.push(newThreat)
-  return NextResponse.json(newThreat, { status: 201 })
-}
-
-export async function PATCH(request: Request) {
-  const body = await request.json()
-  const index = threats.findIndex((t) => t.id === body.id)
-  if (index !== -1) {
-    threats[index] = { ...threats[index], ...body }
-    return NextResponse.json(threats[index])
-  }
-  return NextResponse.json({ error: "Threat not found" }, { status: 404 })
 }
