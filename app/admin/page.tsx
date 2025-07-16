@@ -1,22 +1,23 @@
 "use client"
 
+import { CardDescription } from "@/components/ui/card"
+
 import type React from "react"
 
 import { useEffect } from "react"
 
 import { useState } from "react"
 
-import { CardDescription } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { Users, Activity, Zap, ShieldAlert } from "lucide-react"
+import { Users, Activity, Zap } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts"
 
 interface UserData {
   id: string
@@ -60,41 +61,6 @@ interface AnalyticsData {
   energyConsumed: number // kWh
   averageSessionDuration: number // minutes
 }
-
-const salesData = [
-  { name: "Jan", sales: 4000 },
-  { name: "Feb", sales: 3000 },
-  { name: "Mar", sales: 2000 },
-  { name: "Apr", sales: 2780 },
-  { name: "May", sales: 1890 },
-  { name: "Jun", sales: 2390 },
-]
-
-const userData = [
-  { name: "Jan", users: 2400 },
-  { name: "Feb", users: 1398 },
-  { name: "Mar", users: 9800 },
-  { name: "Apr", users: 3908 },
-  { name: "May", users: 4800 },
-  { name: "Jun", users: 3800 },
-]
-
-const activityData = [
-  { name: "Mon", value: 100 },
-  { name: "Tue", value: 200 },
-  { name: "Wed", value: 150 },
-  { name: "Thu", value: 300 },
-  { name: "Fri", value: 250 },
-  { name: "Sat", value: 180 },
-  { name: "Sun", value: 220 },
-]
-
-const threatData = [
-  { name: "Week 1", threats: 5 },
-  { name: "Week 2", threats: 8 },
-  { name: "Week 3", threats: 3 },
-  { name: "Week 4", threats: 10 },
-]
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -330,7 +296,7 @@ export default function AdminPage() {
             <Zap className="h-4 w-4 mr-2" /> Chargers
           </TabsTrigger>
           <TabsTrigger value="threats" className="py-2 text-base">
-            <ShieldAlert className="h-4 w-4 mr-2" /> Threats
+            <Activity className="h-4 w-4 mr-2" /> Threats
           </TabsTrigger>
           <TabsTrigger value="ml-models" className="py-2 text-base">
             <Zap className="h-4 w-4 mr-2" /> ML Models
@@ -362,7 +328,7 @@ export default function AdminPage() {
             <Card className="shadow-md hover:shadow-lg transition-shadow duration-300 animate-fade-in delay-300">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Threats Detected</CardTitle>
-                <ShieldAlert className="h-6 w-6 text-red-500" />
+                <Activity className="h-6 w-6 text-red-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold">{analytics?.totalThreats}</div>
@@ -395,7 +361,7 @@ export default function AdminPage() {
                     <Activity className="h-4 w-4 text-blue-500" /> Charger #001 started charging.
                   </li>
                   <li className="flex items-center gap-2">
-                    <ShieldAlert className="h-4 w-4 text-red-500" /> High severity threat detected on Charger #005.
+                    <Activity className="h-4 w-4 text-red-500" /> High severity threat detected on Charger #005.
                   </li>
                   <li className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-green-500" /> New user registered: alice@example.com.
@@ -427,81 +393,6 @@ export default function AdminPage() {
                   <Progress value={70} className="h-2" indicatorClassName="bg-yellow-500" />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">70% operational (needs review)</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Sales Overview</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={salesData}>
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis
-                      stroke="#888888"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => `$${value}`}
-                    />
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <Tooltip />
-                    <Bar dataKey="sales" fill="#adfa1d" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>New Users</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <LineChart data={userData}>
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="users" stroke="#8884d8" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Daily Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={activityData}>
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Threats Over Time</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <LineChart data={threatData}>
-                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="threats" stroke="#ef4444" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
@@ -562,12 +453,10 @@ export default function AdminPage() {
                   />
                 </div>
                 <div className="flex items-center space-x-2 col-span-full">
-                  <input
+                  <Checkbox
                     id="new-user-terms"
-                    type="checkbox"
                     checked={newUserTermsAccepted}
-                    onChange={(e) => setNewUserTermsAccepted(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    onCheckedChange={(checked) => setNewUserTermsAccepted(!!checked)}
                   />
                   <Label htmlFor="new-user-terms">I agree to the terms and conditions</Label>
                 </div>
@@ -693,7 +582,7 @@ export default function AdminPage() {
           <Card className="shadow-md hover:shadow-lg transition-shadow duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ShieldAlert className="h-5 w-5" /> Security Threats
+                <Activity className="h-5 w-5" /> Security Threats
               </CardTitle>
               <CardDescription>Review and manage detected security threats.</CardDescription>
             </CardHeader>

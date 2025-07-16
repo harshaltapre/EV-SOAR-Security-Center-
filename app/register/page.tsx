@@ -18,38 +18,9 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
-  const [vehicleMake, setVehicleMake] = useState("")
-  const [vehicleModel, setVehicleModel] = useState("")
-  const [vehicleYear, setVehicleYear] = useState("")
-  const [vehicleLicensePlate, setVehicleLicensePlate] = useState("")
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-
-  const validatePassword = (password: string) => {
-    const minLength = 8
-    const hasUpperCase = /[A-Z]/.test(password)
-    const hasLowerCase = /[a-z]/.test(password)
-    const hasDigit = /\d/.test(password)
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-
-    if (password.length < minLength) {
-      return `Password must be at least ${minLength} characters long.`
-    }
-    if (!hasUpperCase) {
-      return "Password must contain at least one uppercase letter."
-    }
-    if (!hasLowerCase) {
-      return "Password must contain at least one lowercase letter."
-    }
-    if (!hasDigit) {
-      return "Password must contain at least one digit."
-    }
-    if (!hasSpecialChar) {
-      return "Password must contain at least one special character."
-    }
-    return null
-  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,21 +36,20 @@ export default function RegisterPage() {
       return
     }
 
-    const passwordError = validatePassword(password)
-    if (passwordError) {
+    if (password.length < 8) {
       toast({
         title: "Registration Failed",
-        description: passwordError,
+        description: "Password must be at least 8 characters long.",
         variant: "destructive",
       })
       setLoading(false)
       return
     }
 
-    if (!agreedToTerms) {
+    if (!termsAccepted) {
       toast({
         title: "Registration Failed",
-        description: "You must agree to the terms and conditions.",
+        description: "You must accept the terms and conditions.",
         variant: "destructive",
       })
       setLoading(false)
@@ -92,16 +62,7 @@ export default function RegisterPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          phone,
-          vehicleMake,
-          vehicleModel,
-          vehicleYear,
-          vehicleLicensePlate,
-        }),
+        body: JSON.stringify({ email, password, name, phone, termsAccepted }),
       })
 
       const data = await response.json()
@@ -109,7 +70,7 @@ export default function RegisterPage() {
       if (response.ok) {
         toast({
           title: "Registration Successful",
-          description: data.message || "Please check your email to confirm your account.",
+          description: data.message,
           variant: "default",
         })
         router.push("/login")
@@ -134,7 +95,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6">
-      <Card className="w-full max-w-lg mx-auto shadow-lg animate-fade-in">
+      <Card className="w-full max-w-md mx-auto shadow-lg animate-fade-in">
         <CardHeader className="text-center space-y-3 p-6 pb-4">
           <div className="flex items-center justify-center gap-3 text-blue-600">
             <Shield className="h-10 w-10 animate-bounce-in" />
@@ -146,31 +107,23 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent className="space-y-6 p-6 pt-0">
           <form onSubmit={handleRegister} className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="John Doe"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="+1 (555) 123-4567"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-gray-700 dark:text-gray-300">
+                Full Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-11 text-base focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-gray-700 dark:text-gray-300">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -178,83 +131,61 @@ export default function RegisterPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-11 text-base focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-gray-700 dark:text-gray-300">
+                Phone Number (Optional)
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+1 (555) 123-4567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="h-11 text-base focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Vehicle Information (Optional)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="vehicle-make">Make</Label>
-                  <Input
-                    id="vehicle-make"
-                    type="text"
-                    placeholder="Tesla"
-                    value={vehicleMake}
-                    onChange={(e) => setVehicleMake(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vehicle-model">Model</Label>
-                  <Input
-                    id="vehicle-model"
-                    type="text"
-                    placeholder="Model 3"
-                    value={vehicleModel}
-                    onChange={(e) => setVehicleModel(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vehicle-year">Year</Label>
-                  <Input
-                    id="vehicle-year"
-                    type="number"
-                    placeholder="2023"
-                    value={vehicleYear}
-                    onChange={(e) => setVehicleYear(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="license-plate">License Plate</Label>
-                  <Input
-                    id="license-plate"
-                    type="text"
-                    placeholder="ABC-123"
-                    value={vehicleLicensePlate}
-                    onChange={(e) => setVehicleLicensePlate(e.target.value)}
-                  />
-                </div>
-              </div>
+              <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-11 text-base focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password" className="text-gray-700 dark:text-gray-300">
+                Confirm Password
+              </Label>
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="••••••••"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="h-11 text-base focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              />
             </div>
             <div className="flex items-center space-x-2">
-              <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(!!checked)} />
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(!!checked)}
+                className="text-blue-600"
+              />
               <Label htmlFor="terms" className="text-sm text-gray-700 dark:text-gray-300">
                 I agree to the{" "}
-                <Link href="#" className="underline hover:text-blue-600" prefetch={false}>
-                  Terms and Conditions
+                <Link href="#" className="underline hover:text-blue-700" prefetch={false}>
+                  terms and conditions
                 </Link>
               </Label>
             </div>

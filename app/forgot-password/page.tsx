@@ -30,14 +30,14 @@ export default function ForgotPasswordPage() {
 
       if (response.ok) {
         toast({
-          title: "Password Reset Email Sent",
-          description: data.message || "Please check your inbox for instructions to reset your password.",
+          title: "Password Reset Initiated",
+          description: data.message,
           variant: "default",
         })
       } else {
         toast({
           title: "Error",
-          description: data.error || "Failed to send password reset email. Please try again.",
+          description: data.error || "Failed to send reset email. Please try again.",
           variant: "destructive",
         })
       }
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
               EV-SOAR
             </CardTitle>
           </div>
-          <CardDescription className="text-gray-600 dark:text-gray-400 text-lg">Forgot Your Password?</CardDescription>
+          <CardDescription className="text-gray-600 dark:text-gray-400 text-lg">Reset Your Password</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 p-6 pt-0">
           <form onSubmit={handleForgotPassword} className="space-y-5">
@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
               className="w-full h-12 text-lg font-semibold bg-blue-600 hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
               disabled={loading}
             >
-              {loading ? "Sending..." : "Send Reset Link"}
+              {loading ? "Sending Link..." : "Send Reset Link"}
             </Button>
           </form>
           <div className="text-center text-sm text-gray-600 dark:text-gray-400">

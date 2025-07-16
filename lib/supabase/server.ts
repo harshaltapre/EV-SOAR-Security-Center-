@@ -16,18 +16,18 @@ export function createSupabaseServerClient() {
           try {
             cookieStore.set({ name, value, ...options })
           } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // The `cookies().set()` method can only be called from a Server Component or Route Handler.
+            // This error is typically not a problem if you're only using it for authentication cookies.
+            console.warn("Could not set cookie from server:", error)
           }
         },
         remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value: "", ...options })
           } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // The `cookies().set()` method can only be called from a Server Component or Route Handler.
+            // This error is typically not a problem if you're only using it for authentication cookies.
+            console.warn("Could not remove cookie from server:", error)
           }
         },
       },

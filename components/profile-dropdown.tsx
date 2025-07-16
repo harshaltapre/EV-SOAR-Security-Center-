@@ -11,65 +11,68 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "@/components/ui/use-toast"
 import { createSupabaseBrowserClient } from "@/lib/supabase/client"
-import { UserIcon, LogOut, Settings, CreditCard, LifeBuoy, Keyboard } from "lucide-react"
+import { LogOut, Settings, Crown } from "lucide-react"
 
 interface UserProfile {
   id: string
   email: string
   name?: string
-  role?: string
+  role?: "admin" | "user"
 }
 
 export function ProfileDropdown() {
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
   const supabase = createSupabaseBrowserClient()
 
   useEffect(() => {
     const fetchUser = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser()
-      if (user) {
-        setUser({
-          id: user.id,
-          email: user.email || "",
-          name: user.user_metadata?.name || user.email?.split("@")[0] || "User",
-          role: user.email === "harshaltapre27@yahoo.com" ? "Admin" : "User",
-        })
-      } else if (error) {
-        console.error("Error fetching user:", error.message)
+      setLoading(true)
+      const { data, error } = await supabase.auth.getUser()
+      if (error || !data.user) {
         setUser(null)
+        router.push("/login") // Redirect to login if no user
+      } else {
+        setUser({
+          id: data.user.id,
+          email: data.user.email || "N/A",
+          name: data.user.user_metadata?.name || data.user.email?.split("@")[0],
+          role: data.user.email === "harshaltapre27@yahoo.com" ? "admin" : "user",
+        })
       }
+      setLoading(false)
     }
 
     fetchUser()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || "",
-          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "User",
-          role: session.user.email === "harshaltapre27@yahoo.com" ? "Admin" : "User",
-        })
-      } else {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || "N/A",
+            name: session.user.user_metadata?.name || session.user.email?.split("@")[0],
+            role: session.user.email === "harshaltapre27@yahoo.com" ? "admin" : "user",
+          })
+        }
+      } else if (event === "SIGNED_OUT") {
         setUser(null)
+        router.push("/login")
       }
     })
 
     return () => {
       authListener.unsubscribe()
     }
-  }, [supabase])
+  }, [router, supabase])
 
   const handleLogout = async () => {
+    setLoading(true)
     try {
       const response = await fetch("/api/auth", {
         method: "DELETE",
@@ -94,16 +97,27 @@ export function ProfileDropdown() {
       console.error("Logout error:", error)
       toast({
         title: "Error",
-        description: "Could not connect to the server for logout. Please try again.",
+        description: "Could not connect to the server to log out. Please try again.",
         variant: "destructive",
       })
+    } finally {
+      setLoading(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center space-x-2">
+        <div className="h-8 w-8 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+        <div className="h-4 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-700" />
+      </div>
+    )
   }
 
   if (!user) {
     return (
-      <Button variant="ghost" size="sm" onClick={() => router.push("/login")}>
-        Login
+      <Button onClick={() => router.push("/login")} variant="ghost">
+        Sign In
       </Button>
     )
   }
@@ -112,8 +126,8 @@ export function ProfileDropdown() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="/placeholder-user.jpg" alt="@shadcn" />
+          <Avatar className="h-9 w-9">
+            <AvatarImage src="/placeholder-user.jpg" alt="User Avatar" />
             <AvatarFallback>
               {user.name ? user.name.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
             </AvatarFallback>
@@ -123,44 +137,32 @@ export function ProfileDropdown() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name}</p>
-            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-            {user.role && <p className="text-xs leading-none text-muted-foreground mt-1">Role: {user.role}</p>}
+            <p className="text-sm font-medium leading-none">{user.name || "User"}</p>
+            <p className="text-xs leading-none text-gray-500 dark:text-gray-400">{user.email}</p>
+            {user.role === "admin" && (
+              <p className="text-xs leading-none text-blue-600 flex items-center gap-1">
+                <Crown className="h-3 w-3" /> Admin
+              </p>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => router.push("/settings")}>
-            <UserIcon className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/settings/billing")}>
-            <CreditCard className="mr-2 h-4 w-4" />
-            <span>Billing</span>
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/settings")}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Keyboard className="mr-2 h-4 w-4" />
-            <span>Keyboard shortcuts</span>
-            <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-          </DropdownMenuItem>
+          {user.role === "admin" && (
+            <DropdownMenuItem onClick={() => router.push("/admin")}>
+              <Crown className="mr-2 h-4 w-4" />
+              <span>Admin Panel</span>
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <LifeBuoy className="mr-2 h-4 w-4" />
-          <span>Support</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
+        <DropdownMenuItem onClick={handleLogout} disabled={loading}>
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

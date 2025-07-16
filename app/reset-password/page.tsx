@@ -10,97 +10,31 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
 import { Shield } from "lucide-react"
-import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [token, setToken] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  useEffect(() => {
-    // Supabase passes the access_token in the URL hash after a password reset email link is clicked
-    const hash = window.location.hash
-    const params = new URLSearchParams(hash.substring(1)) // Remove '#'
-    const accessToken = params.get("access_token")
+  const token = searchParams.get("token")
+  const type = searchParams.get("type") as "recovery" | "email_change" | null
 
-    if (accessToken) {
-      setToken(accessToken)
-      // Optionally, you can immediately set the session with this token
-      // This is often handled by Supabase's client library automatically on page load
-      // if it detects an access_token in the URL hash.
-      const supabase = createSupabaseBrowserClient()
-      supabase.auth
-        .setSession({ access_token: accessToken, refresh_token: params.get("refresh_token") || "" })
-        .then(({ data, error }) => {
-          if (error) {
-            console.error("Error setting session from URL hash:", error.message)
-            toast({
-              title: "Error",
-              description: "Failed to validate reset link. Please try again.",
-              variant: "destructive",
-            })
-            setToken(null) // Invalidate token if session setting fails
-          } else if (!data.session) {
-            // This can happen if the token is expired or invalid
-            toast({
-              title: "Error",
-              description: "Invalid or expired reset link. Please request a new one.",
-              variant: "destructive",
-            })
-            setToken(null)
-          }
-        })
-    } else {
-      // If no token is present, the user might have navigated directly or the link is malformed
+  useEffect(() => {
+    if (!token || !type) {
       toast({
         title: "Invalid Link",
-        description: "This password reset link is invalid or has expired. Please request a new one.",
+        description: "The password reset link is missing required parameters.",
         variant: "destructive",
       })
+      router.push("/forgot-password")
     }
-  }, [])
-
-  const validatePassword = (password: string) => {
-    const minLength = 8
-    const hasUpperCase = /[A-Z]/.test(password)
-    const hasLowerCase = /[a-z]/.test(password)
-    const hasDigit = /\d/.test(password)
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
-
-    if (password.length < minLength) {
-      return `Password must be at least ${minLength} characters long.`
-    }
-    if (!hasUpperCase) {
-      return "Password must contain at least one uppercase letter."
-    }
-    if (!hasLowerCase) {
-      return "Password must contain at least one lowercase letter."
-    }
-    if (!hasDigit) {
-      return "Password must contain at least one digit."
-    }
-    if (!hasSpecialChar) {
-      return "Password must contain at least one special character."
-    }
-    return null
-  }
+  }, [token, type, router])
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
-    if (!token) {
-      toast({
-        title: "Error",
-        description: "Invalid or missing reset token. Please request a new password reset link.",
-        variant: "destructive",
-      })
-      setLoading(false)
-      return
-    }
 
     if (password !== confirmPassword) {
       toast({
@@ -112,11 +46,20 @@ export default function ResetPasswordPage() {
       return
     }
 
-    const passwordError = validatePassword(password)
-    if (passwordError) {
+    if (password.length < 8) {
       toast({
         title: "Reset Failed",
-        description: passwordError,
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive",
+      })
+      setLoading(false)
+      return
+    }
+
+    if (!token || !type) {
+      toast({
+        title: "Error",
+        description: "Missing reset token or type.",
         variant: "destructive",
       })
       setLoading(false)
@@ -124,26 +67,32 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      const supabase = createSupabaseBrowserClient()
-      const { error } = await supabase.auth.updateUser({ password: password })
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password, token, type }),
+      })
 
-      if (error) {
-        console.error("Supabase password reset error:", error.message)
-        toast({
-          title: "Reset Failed",
-          description: error.message || "Failed to reset password. Please try again.",
-          variant: "destructive",
-        })
-      } else {
+      const data = await response.json()
+
+      if (response.ok) {
         toast({
           title: "Password Reset Successful",
-          description: "Your password has been updated. You can now log in with your new password.",
+          description: data.message,
           variant: "default",
         })
         router.push("/login")
+      } else {
+        toast({
+          title: "Reset Failed",
+          description: data.error || "An unexpected error occurred.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      console.error("Password reset error:", error)
+      console.error("Reset password error:", error)
       toast({
         title: "Error",
         description: "Could not connect to the server. Please try again.",
@@ -152,6 +101,21 @@ export default function ResetPasswordPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!token || !type) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6">
+        <Card className="w-full max-w-md mx-auto shadow-lg animate-fade-in">
+          <CardHeader className="text-center space-y-3 p-6 pb-4">
+            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-50">Loading...</CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              Please wait while we verify your reset link.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -164,12 +128,14 @@ export default function ResetPasswordPage() {
               EV-SOAR
             </CardTitle>
           </div>
-          <CardDescription className="text-gray-600 dark:text-gray-400 text-lg">Set Your New Password</CardDescription>
+          <CardDescription className="text-gray-600 dark:text-gray-400 text-lg">Set New Password</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6 p-6 pt-0">
           <form onSubmit={handleResetPassword} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="password">New Password</Label>
+              <Label htmlFor="password" className="text-gray-700 dark:text-gray-300">
+                New Password
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -181,7 +147,9 @@ export default function ResetPasswordPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirm New Password</Label>
+              <Label htmlFor="confirm-password" className="text-gray-700 dark:text-gray-300">
+                Confirm New Password
+              </Label>
               <Input
                 id="confirm-password"
                 type="password"
@@ -195,7 +163,7 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               className="w-full h-12 text-lg font-semibold bg-blue-600 hover:bg-blue-700 transition-all duration-300 transform hover:scale-105"
-              disabled={loading || !token}
+              disabled={loading}
             >
               {loading ? "Resetting..." : "Reset Password"}
             </Button>

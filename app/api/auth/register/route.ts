@@ -1,10 +1,33 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
+interface RegisterRequest {
+  email: string
+  password: string
+  name?: string
+  phone?: string
+  vehicleInfo?: {
+    make?: string
+    model?: string
+    year?: number
+    licensePlate?: string
+  }
+  termsAccepted: boolean
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email, password, name, phone, vehicleMake, vehicleModel, vehicleYear, vehicleLicensePlate } = body
+    const body: RegisterRequest = await request.json()
+    const { email, password, name, phone, vehicleInfo, termsAccepted } = body
+
+    if (!termsAccepted) {
+      return NextResponse.json({ error: "You must accept the terms and conditions." }, { status: 400 })
+    }
+
+    // Basic password strength validation (can be enhanced)
+    if (password.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters long." }, { status: 400 })
+    }
 
     const supabase = createSupabaseServerClient()
 
@@ -15,18 +38,24 @@ export async function POST(request: NextRequest) {
         data: {
           name,
           phone,
-          vehicle_make: vehicleMake,
-          vehicle_model: vehicleModel,
-          vehicle_year: vehicleYear,
-          vehicle_license_plate: vehicleLicensePlate,
+          vehicle_make: vehicleInfo?.make,
+          vehicle_model: vehicleInfo?.model,
+          vehicle_year: vehicleInfo?.year,
+          vehicle_license_plate: vehicleInfo?.licensePlate,
         },
-        emailRedirectTo: `${request.nextUrl.origin}/auth/callback`, // Or your desired confirmation page
+        emailRedirectTo: `${request.nextUrl.origin}/auth/confirm`, // Redirect after email confirmation
       },
     })
 
     if (error) {
       console.error("Supabase registration error:", error.message)
-      return NextResponse.json({ error: error.message || "Registration failed." }, { status: 400 })
+      if (error.message.includes("User already registered")) {
+        return NextResponse.json(
+          { error: "Email already registered. Please log in or reset password." },
+          { status: 409 },
+        )
+      }
+      return NextResponse.json({ error: error.message || "Registration failed. Please try again." }, { status: 500 })
     }
 
     return NextResponse.json({

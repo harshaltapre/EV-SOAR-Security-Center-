@@ -2,105 +2,41 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, ShieldAlert, BarChart, Settings, Bell, HardHat, Crown } from "lucide-react"
-import { Users } from "lucide-react" // Declaring the Users variable
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuBadge } from "@/components/ui/sidebar"
+import { cn } from "@/lib/utils"
+import { Shield, Home, Zap, BarChart, Settings, Bell, HardHatIcon as Hat } from "lucide-react"
 
-interface NavProps {
-  isAdmin: boolean
-}
-
-export function Navigation({ isAdmin }: NavProps) {
+export function Navigation() {
   const pathname = usePathname()
 
-  const userNavItems = [
-    {
-      href: "/dashboard",
-      icon: Home,
-      label: "Dashboard",
-      isActive: pathname === "/dashboard",
-    },
-    {
-      href: "/threats",
-      icon: ShieldAlert,
-      label: "Threats",
-      isActive: pathname === "/threats",
-      badge: 5, // Example badge
-    },
-    {
-      href: "/analytics",
-      icon: BarChart,
-      label: "Analytics",
-      isActive: pathname === "/analytics",
-    },
-    {
-      href: "/hardware",
-      icon: HardHat,
-      label: "Hardware",
-      isActive: pathname === "/hardware",
-    },
-    {
-      href: "/notifications",
-      icon: Bell,
-      label: "Notifications",
-      isActive: pathname === "/notifications",
-    },
-    {
-      href: "/settings",
-      icon: Settings,
-      label: "Settings",
-      isActive: pathname === "/settings",
-    },
+  const navItems = [
+    { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/threats", label: "Threats", icon: Shield },
+    { href: "/analytics", label: "Analytics", icon: BarChart },
+    { href: "/hardware", label: "Hardware", icon: Hat },
+    { href: "/notifications", label: "Notifications", icon: Bell },
+    { href: "/settings", label: "Settings", icon: Settings },
   ]
-
-  const adminNavItems = [
-    {
-      href: "/admin",
-      icon: Crown,
-      label: "Admin Dashboard",
-      isActive: pathname === "/admin",
-    },
-    {
-      href: "/users", // Assuming an admin users page
-      icon: Users,
-      label: "Manage Users",
-      isActive: pathname === "/users",
-    },
-    {
-      href: "/chargers", // Assuming an admin chargers page
-      icon: HardHat,
-      label: "Manage Chargers",
-      isActive: pathname === "/chargers",
-    },
-    {
-      href: "/threat-management", // Assuming an admin threat management page
-      icon: ShieldAlert,
-      label: "Threat Management",
-      isActive: pathname === "/threat-management",
-    },
-    {
-      href: "/admin-settings", // Assuming admin specific settings
-      icon: Settings,
-      label: "Admin Settings",
-      isActive: pathname === "/admin-settings",
-    },
-  ]
-
-  const navItems = isAdmin ? adminNavItems : userNavItems
 
   return (
-    <SidebarMenu>
+    <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+      <Link href="#" className="flex items-center gap-2 text-lg font-semibold md:text-base" prefetch={false}>
+        <Zap className="h-6 w-6" />
+        <span className="sr-only">EV-SOAR</span>
+      </Link>
       {navItems.map((item) => (
-        <SidebarMenuItem key={item.href}>
-          <SidebarMenuButton asChild isActive={item.isActive}>
-            <Link href={item.href}>
-              <item.icon />
-              <span>{item.label}</span>
-            </Link>
-          </SidebarMenuButton>
-          {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
-        </SidebarMenuItem>
+        <Link
+          key={item.href}
+          href={item.href}
+          className={cn(
+            "flex items-center gap-2 text-gray-500 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
+            pathname === item.href && "text-gray-900 dark:text-gray-50",
+          )}
+          prefetch={false}
+        >
+          <item.icon className="h-4 w-4" />
+          {item.label}
+        </Link>
       ))}
-    </SidebarMenu>
+    </nav>
   )
 }

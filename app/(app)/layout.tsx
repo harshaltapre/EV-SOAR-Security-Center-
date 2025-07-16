@@ -1,64 +1,21 @@
-import type React from "react"
-import { cookies } from "next/headers"
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/app-sidebar"
-import { Toaster } from "@/components/ui/toaster"
-import { Separator } from "@/components/ui/separator"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import type { ReactNode } from "react"
+import { Navigation } from "@/components/layout/navigation"
 import { ProfileDropdown } from "@/components/profile-dropdown"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { Toaster } from "@/components/ui/toaster"
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const cookieStore = cookies()
-  const defaultOpen = cookieStore.get("sidebar:state")?.value === "true"
+interface AppLayoutProps {
+  children: ReactNode
+}
 
-  const supabase = createSupabaseServerClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    redirect("/login")
-  }
-
-  // Determine if the user is an admin based on their email
-  const isAdmin = user.email === "harshaltapre27@yahoo.com"
-
+export default function AppLayout({ children }: AppLayoutProps) {
   return (
-    <SidebarProvider defaultOpen={defaultOpen}>
-      <AppSidebar isAdmin={isAdmin} />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator orientation="vertical" className="mr-2 h-4" />
-          {/* Dynamic Breadcrumb based on current path - Placeholder for now */}
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/">Home</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Dashboard</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <div className="ml-auto">
-            <ProfileDropdown />
-          </div>
-        </header>
-        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
-      </SidebarInset>
+    <div className="flex min-h-screen w-full flex-col bg-gray-100 dark:bg-gray-950">
+      <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b bg-white px-4 dark:border-gray-800 dark:bg-gray-900 md:px-6">
+        <Navigation />
+        <ProfileDropdown />
+      </header>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">{children}</main>
       <Toaster />
-    </SidebarProvider>
+    </div>
   )
 }

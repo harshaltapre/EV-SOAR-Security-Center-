@@ -1,31 +1,26 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Shield } from "lucide-react"
 
-export default function Loading() {
+export default function ResetPasswordLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6">
-      <div className="w-full max-w-md mx-auto shadow-lg rounded-lg overflow-hidden">
-        <div className="p-6 pb-4 text-center space-y-3">
-          <Skeleton className="h-10 w-10 mx-auto rounded-full" />
-          <Skeleton className="h-10 w-3/4 mx-auto" />
-          <Skeleton className="h-6 w-1/2 mx-auto" />
-        </div>
-        <div className="p-6 pt-0 space-y-6">
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <Skeleton className="h-5 w-20" />
-              <Skeleton className="h-11 w-full" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-5 w-24" />
-              <Skeleton className="h-11 w-full" />
-            </div>
-            <Skeleton className="h-12 w-full" />
+      <Card className="w-full max-w-md mx-auto shadow-lg animate-fade-in">
+        <CardHeader className="text-center space-y-3 p-6 pb-4">
+          <div className="flex items-center justify-center gap-3 text-blue-600">
+            <Shield className="h-10 w-10 animate-bounce-in" />
+            <CardTitle className="text-4xl font-extrabold text-gray-900 dark:text-gray-50 tracking-tight">
+              EV-SOAR
+            </CardTitle>
           </div>
-          <div className="text-center text-sm space-y-2">
-            <Skeleton className="h-4 w-1/3 mx-auto" />
+          <CardDescription className="text-gray-600 dark:text-gray-400 text-lg">Loading Password Reset</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6 p-6 pt-0">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+            <p className="text-gray-700 dark:text-gray-300">Verifying reset link...</p>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
